@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>仕組み・構成 - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>仕組み・構成</h1>
+<p class="lead">ソースの構成と、主要な設計のポイントです。</p>
+<h2>ファイル構成</h2>
+<table>
+<tr><th>ファイル</th><th>役割</th></tr>
+<tr><td><code>main.go</code></td><td>エントリ。OS スレッド固定、多重起動チェック、設定読み込み、ウィンドウ作成</td></tr>
+<tr><td><code>window.go</code></td><td>タイトルバー / タブ / ツールバーのレイアウト、ヒットテスト、ドラッグ移動・リサイズ、タブのドラッグ並び替え</td></tr>
+<tr><td><code>paint.go</code></td><td>GDI / GDI+ によるタブバー・アドレスバー・バッジの描画</td></tr>
+<tr><td><code>tabs.go</code></td><td>タブごとの WebView2 コントローラ、ショートカット、メッセージ処理、<code>MoveTab</code></td></tr>
+<tr><td><code>address.go</code></td><td>アドレスバー (Win32 EDIT コントロールのサブクラス化)、入力の解釈</td></tr>
+<tr><td><code>theme.go</code></td><td>ダーク / ライト / システム連動、X 側 <code>night_mode</code> の同期</td></tr>
+<tr><td><code>pages.go</code></td><td>設定・スタートページの状態管理と、ページからのメッセージ処理</td></tr>
+<tr><td><code>pages/</code></td><td>埋め込み HTML (<code>settings.html</code> / <code>start.html</code> / <code>i18n.js</code>)</td></tr>
+<tr><td><code>profiles.go</code></td><td>プロファイルの追加・改名・色・削除</td></tr>
+<tr><td><code>background.go</code></td><td>スタートページ背景画像の取り込みと配信</td></tr>
+<tr><td><code>i18n.go</code></td><td>4 言語の文字列テーブルと言語判定</td></tr>
+<tr><td><code>config.go</code></td><td><code>config.json</code> の読み書き、テーマの解決</td></tr>
+<tr><td><code>inject.go</code></td><td>各タブに注入する JavaScript</td></tr>
+<tr><td><code>external.go</code></td><td>既定のブラウザーで URL を開く</td></tr>
+<tr><td><code>icon.go</code></td><td>exe に埋め込まれたアイコンの読み込み</td></tr>
+<tr><td><code>menu.go</code> / <code>inputbox.go</code> / <code>zoom.go</code></td><td>右クリックメニュー、入力ダイアログ、拡大縮小</td></tr>
+<tr><td><code>debuglog.go</code></td><td><code>debug.log</code> への簡易ログ</td></tr>
+<tr><td><code>singleinstance.go</code></td><td>多重起動の防止</td></tr>
+</table>
+<h2>ウィンドウとタブ</h2>
+<div class="diagram">メインウィンドウ (WS_POPUP, GDI で枠を自前描画)
+ ├─ アドレスバー (EDIT 子コントロール)
+ ├─ タブ1 ─ 子 HWND ─ WebView2 コントローラ
+ ├─ タブ2 ─ 子 HWND ─ WebView2 コントローラ
+ └─ …</div>
+<p>タブごとに別の WebView2 コントローラを持ちますが、同一プロファイルのデータフォルダは共有するため、裏側の Edge プロセスやログインセッションは 1 つにまとまります。Win32 のメッセージループと WebView2 (COM) は同じ OS スレッドで動く必要があるため、<code>main</code> の先頭で <code>runtime.LockOSThread()</code> を呼んでいます。</p>
+<h2>ローカルページ (設定・スタート)</h2>
+<ul>
+<li>HTML は <code>//go:embed</code> で実行ファイルに同梱し、<code>NavigateToString</code> で表示します。</li>
+<li>表示直前に <code>/*__STATE__*/null</code> と <code>/*__I18N__*/</code> を、現在の状態 (JSON) と翻訳テーブルに置換します。</li>
+<li>ページ → Go は <code>window.chrome.webview.postMessage</code> で <code>{type, data}</code> の JSON を送ります。ローカルページ用のメッセージは、タブの種類 (<code>kindWeb</code> / <code>kindStart</code> / <code>kindSettings</code>) が一致するときだけ受け付けます。</li>
+<li>Go → ページは <code>window.__setState(...)</code> と <code>window.__toast(...)</code> を <code>Eval</code> で呼びます。</li>
+<li>背景画像は仮想ホスト <code>https://xbrowser.local/</code> を <code>%LocalAppData%\XBrowser\StartBg</code> に割り当てて配信します。</li>
+</ul>
+<h2>注入 JavaScript (<code>inject.go</code>)</h2>
+<table>
+<tr><th>メッセージ</th><th>内容</th></tr>
+<tr><td><code>open_external</code></td><td>X 以外のリンクのクリック / <code>window.open</code> を捕捉して既定のブラウザーへ</td></tr>
+<tr><td><code>title</code> / <code>url</code></td><td>タブ名とアドレスバーの更新 (変化時 + 2 秒間隔、<code>pushState</code> / <code>replaceState</code> もフック)</td></tr>
+<tr><td><code>zoom</code></td><td>Ctrl + ホイールの拡大縮小</td></tr>
+<tr><td><code>badge</code></td><td>通知・DM 件数。メニューの <code>aria-live</code> バッジの数字を合計し、無ければタイトルの <code>(N)</code> を使用 (3 秒間隔)</td></tr>
+<tr><td><code>theme_cookie</code></td><td>X 側の <code>night_mode</code> クッキーの現在値</td></tr>
+</table>
+<h2>テーマ</h2>
+<p>プリセットは <code>dark</code> / <code>light</code> / <code>system</code>。<code>system</code> はレジストリの <code>AppsUseLightTheme</code> を読み、<code>WM_SETTINGCHANGE</code> で Windows 側の変更に追従します。</p>
+<h2>既知の制限</h2>
+<ul>
+<li>外部リンクの判定はクリックと <code>window.open</code> ベースです。<code>location.href</code> によるスクリプト遷移やサーバーリダイレクトは検知できない場合があります。</li>
+<li>中クリック / Ctrl + クリックで新しいウィンドウを開く動作は、WebView2 の <code>NewWindowRequested</code> 対応が必要で、未対応です。</li>
+<li>レイアウトは固定ピクセルで、高 DPI への対応は簡易的です (<code>window.go</code> の定数で調整可能)。</li>
+<li>通知バッジと X 側のテーマ連動は、X の DOM / クッキー仕様に依存します。</li>
+</ul>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>

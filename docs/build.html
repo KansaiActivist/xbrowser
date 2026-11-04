@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ビルド方法 - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>ビルド方法</h1>
+<p class="lead">Go だけでビルドできます。</p>
+<h2>Windows でビルド</h2>
+<pre><code>cd xbrowser
+go build -ldflags="-H windowsgui" -o xbrowser.exe .</code></pre>
+<p><code>-H windowsgui</code> を付けるとコンソールウィンドウが出ません。外すとコンソール付きで起動します。同梱の <code>go.mod</code> / <code>go.sum</code> で動作確認済みなので、通常は <code>go mod tidy</code> は不要です。</p>
+<h2>Linux などからのクロスビルド</h2>
+<pre><code>export GOOS=windows GOARCH=amd64 GOFLAGS=-mod=mod GOPROXY=direct
+go build -ldflags="-H windowsgui" -o xbrowser.exe .</code></pre>
+<h2>依存パッケージ</h2>
+<table>
+<tr><th>パッケージ</th><th>用途</th></tr>
+<tr><td><code>github.com/jchv/go-webview2</code></td><td>WebView2 (<code>edge.Chromium</code>) の操作</td></tr>
+<tr><td><code>github.com/lxn/win</code></td><td>Win32 API</td></tr>
+<tr><td><code>golang.org/x/sys</code></td><td>レジストリ (システムのテーマ判定) など</td></tr>
+</table>
+<h2>アイコンの埋め込み (go-winres)</h2>
+<pre><code>go install github.com/tc-hib/go-winres@latest
+go-winres init
+go-winres make
+go build -ldflags="-H windowsgui" -o xbrowser.exe .</code></pre>
+<p><code>go-winres make</code> が出力する <code>rsrc_windows_amd64.syso</code> をソースと同じフォルダに置いてからビルドしてください。アプリは実行ファイル内のアイコンリソース (ID 1 → 名前 <code>APP</code> → 最初に見つかったもの) の順で読み込み、タスクバーとタイトルに適用します。</p>
+<div class="note"><b>アイコンが変わらないとき</b>exe を作り直しても Windows のアイコンキャッシュが古いまま残ることがあります。exe の名前を変える、またはタスクバーのピン留めを外して付け直すと反映されます。<code>debug.log</code> の「アイコン リソース数」で、リソースが埋め込まれているか確認できます。</div>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>

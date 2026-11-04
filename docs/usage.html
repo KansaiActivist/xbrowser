@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>基本操作とショートカット - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>基本操作とショートカット</h1>
+<p class="lead">画面の見方とキーボード操作です。</p>
+<h2>画面構成</h2>
+<div class="diagram">┌──────────────────────────────────────────────┐
+│ [タブ1 ●] [タブ2 (3)] [+]            ─  □  ✕ │ ← タブ行
+├──────────────────────────────────────────────┤
+│ ← → ⟳ │ https://x.com/home │ −100%＋ ◐ ⚙ │ ← ツールバー
+├──────────────────────────────────────────────┤
+│                                              │
+│              ページ表示領域                  │
+│                                              │
+└──────────────────────────────────────────────┘</div>
+<ul>
+<li>タブの <b>(3)</b> のような赤いバッジは未読件数です。</li>
+<li>タブ左の色つきの点は、そのタブのプロファイルの色です (既定プロファイルには付きません)。</li>
+<li>ツールバー右側は、縮小 / 拡大率 / 拡大、テーマ切替、設定ボタンです。</li>
+</ul>
+<h2>キーボードショートカット</h2>
+<table>
+<tr><th>キー</th><th>動作</th></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>L</kbd></td><td>アドレスバーにフォーカス (全選択)</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>,</kbd></td><td>設定タブを開く</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd></td><td>ダーク / ライトを切り替え</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>-</kbd></td><td>拡大 / 縮小</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>0</kbd></td><td>拡大率を 100% に戻す</td></tr>
+<tr><td><kbd>Ctrl</kbd> + ホイール</td><td>拡大 / 縮小</td></tr>
+<tr><td><kbd>Esc</kbd> (アドレスバー内)</td><td>入力を破棄して元の URL に戻し、ページへフォーカス</td></tr>
+</table>
+<h2>タブ操作</h2>
+<ul>
+<li><b>追加</b>: タブバーの「+」、または右クリックメニューの「新しいタブ」</li>
+<li><b>並び替え</b>: タブをドラッグ。数ピクセル動かすまではクリック扱いなので、誤って入れ替わりません</li>
+<li><b>閉じる</b>: タブの「×」、または右クリックメニュー</li>
+</ul>
+<h2>右クリックメニュー</h2>
+<p>タブバー上 (タブや余白) を右クリックすると、新しいタブ、プロファイル別の新しいタブ、このタブを閉じる、設定、スタートページ、拡大率のリセットが出ます。ページ内の右クリックは WebView2 標準のメニューです。</p>
+<h2>通知</h2>
+<p>X からのデスクトップ通知を許可するかどうかを、設定の「通知」で切り替えられます。</p>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>

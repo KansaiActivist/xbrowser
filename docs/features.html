@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>機能一覧 - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>機能一覧</h1>
+<p class="lead">xbrowser で使える機能の一覧です。</p>
+<h2>ウィンドウとタブ</h2>
+<table>
+<tr><th>機能</th><th>説明</th></tr>
+<tr><td>カスタムタイトルバー</td><td>枠なしウィンドウ。最小化/最大化/閉じるボタンは大きめの 46px 幅。端のドラッグでリサイズ、タイトルバーのダブルクリックで最大化。</td></tr>
+<tr><td>起動時に最大化</td><td>既定で最大化して起動します。元に戻すと画面の約 85% のサイズになります。</td></tr>
+<tr><td>タブ</td><td>追加・切り替え・閉じる。<b>ドラッグ&amp;ドロップで並び替え</b>できます。</td></tr>
+<tr><td>通知バッジ</td><td>未読の通知・DM の件数を、タブの閉じるボタンの左に赤いバッジで表示 (99 件超は <code>99+</code>)。</td></tr>
+<tr><td>多重起動防止</td><td>すでに起動している場合は新しいウィンドウを作らず、既存のウィンドウを前面に出します。</td></tr>
+</table>
+<h2>アドレスバー</h2>
+<p>タブの下の段に、戻る・進む・再読み込みと、URL の表示/入力欄があります。</p>
+<table>
+<tr><th>入力</th><th>動作</th></tr>
+<tr><td>X のドメインの URL</td><td>現在のタブで開く (<code>http://</code> は <code>https://</code> に補正)</td></tr>
+<tr><td>X 以外の URL / <code>t.co</code></td><td>既定のブラウザーで開く</td></tr>
+<tr><td><code>@名前</code></td><td><code>x.com/名前</code> を開く</td></tr>
+<tr><td>URL でない文字列</td><td>X の検索結果を開く</td></tr>
+</table>
+<h2>外観</h2>
+<ul>
+<li>ダーク / ライト / <b>システムに合わせる</b> の 3 モード。ツールバーの太陽/月ボタンでも切り替え可能</li>
+<li>「X の画面にも反映」で X 側の表示設定 (<code>night_mode</code> クッキー) も連動 (ベストエフォート)</li>
+<li>タブバーの各部の色、タブの角の丸みを設定画面から変更可能</li>
+<li>拡大・縮小 25%〜500%、設定は次回起動時も維持</li>
+</ul>
+<h2>スタートページ</h2>
+<p>新しいタブで開くページを「簡易スタートページ」と「X のホーム」から選べます。簡易スタートページには時計、検索ボックス、X の主要ページへのショートカットが並びます。背景は <b>白 / 黒 / 画像</b> から選べます (画像は 20MB まで、jpg / png / gif / webp / bmp)。</p>
+<h2>プロファイル</h2>
+<p>ログイン状態を完全に分けて複数アカウントを使えます。名前の変更とタブ上の色の指定が可能です。詳しくは<a href="profiles.html">プロファイル</a>を参照してください。</p>
+<h2>言語</h2>
+<p>設定・メニュー・スタートページを含むアプリ全体の表示言語を、日本語 / English / 简体中文 / 한국어 から選べます。初回は OS の言語から自動判定します。</p>
+<h2>外部リンクの扱い</h2>
+<p>X (<code>x.com</code> / <code>twitter.com</code> / <code>twimg.com</code> / <code>twimg.net</code>) 以外のリンク、および <code>t.co</code> の短縮 URL は既定のブラウザーで開きます。ページに注入した JavaScript がクリックと <code>window.open</code> を横取りして処理します。</p>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>

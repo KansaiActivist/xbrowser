@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>プロファイル - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>プロファイル</h1>
+<p class="lead">ログイン状態を分けて、複数アカウントを同時に使えます。</p>
+<h2>仕組み</h2>
+<p>プロファイルごとに WebView2 のユーザーデータフォルダが別になります。Cookie やログイン状態は互いに完全に独立します。</p>
+<table>
+<tr><th>プロファイル</th><th>データフォルダ</th></tr>
+<tr><td>既定 (Default)</td><td><code>%LocalAppData%\XBrowser\WebView2Data</code></td></tr>
+<tr><td>追加したもの</td><td><code>%LocalAppData%\XBrowser\WebView2Data-&lt;名前のスラッグ&gt;</code></td></tr>
+</table>
+<h2>操作</h2>
+<ol>
+<li>設定の「プロファイル」で名前を入力して追加します (最大 30 文字、重複不可、<code>Default</code> は予約済み)。</li>
+<li>一覧から「開く」で、そのプロファイルの新しいタブを開きます。右クリックメニューからも開けます。</li>
+<li>名前は後から変更でき、色はパレットから選べます。色を指定しないプロファイルは、名前から自動で決まる色が付きます。</li>
+<li>不要なプロファイルは削除できます。削除すると名前と色の設定も消えます。</li>
+</ol>
+<div class="note"><b>注意</b>WebView2 は同じユーザーデータフォルダを複数プロセスで同時に使えません。xbrowser を 2 つ起動するのではなく、1 つのアプリの中でプロファイルを使い分けてください。</div>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>

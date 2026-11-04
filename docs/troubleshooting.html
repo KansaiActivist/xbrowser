@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>トラブルシューティング - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>トラブルシューティング</h1>
+<p class="lead">よくある症状と対処です。</p>
+<h2>画面が真っ黒 / 何も表示されない</h2>
+<ul>
+<li>タスクマネージャーで <code>xbrowser.exe</code> が複数動いていないか確認し、すべて終了してから 1 つだけ起動し直してください。WebView2 は同じデータフォルダを複数プロセスで使えません。</li>
+<li>WebView2 Runtime が入っているか確認してください。無い場合は起動時にエラーが表示されます。</li>
+<li>改善しないときは <code>%LocalAppData%\XBrowser\debug.log</code> を確認してください。</li>
+</ul>
+<h2>タスクバーのアイコンが変わらない</h2>
+<p><a href="build.html">ビルド方法</a>のアイコン埋め込み手順を確認してください。<code>.syso</code> を置かずにビルドしていないか、<code>debug.log</code> の「アイコン リソース数」が 0 でないかを見ます。Windows のアイコンキャッシュが原因のときは、ピン留めを外して付け直してください。</p>
+<h2>X の画面がダーク / ライトに切り替わらない</h2>
+<p>X 側のクッキー仕様に依存する機能です。設定の「X の画面にも反映」をオフにし、X の「表示」設定で手動で切り替えてください。アプリ側のタブバーのテーマは影響を受けません。</p>
+<h2>通知バッジが出ない</h2>
+<p>バッジは X のメニューのバッジとタイトルの <code>(N)</code> から件数を読み取っています。X の画面構成が変わると取得できなくなることがあります。</p>
+<h2>リンクが既定のブラウザーで開かない / 小さなウィンドウが出る</h2>
+<p>中クリックや Ctrl + クリックで新しいウィンドウを開く動作は未対応です。通常のクリックで開いてください。</p>
+<h2>アドレスバーに入力した文字が検索になる</h2>
+<p>ドットを含まない文字列、スペースを含む文字列、<code>http(s)</code> 以外のスキーム (<code>javascript:</code> など) は検索として扱います。ドメインは <code>x.com/home</code> のようにドット付きで入力してください。</p>
+<h2>設定を初期状態に戻したい</h2>
+<p>色だけなら設定の「外観」にある初期化ボタンを使います。すべて戻したい場合は、アプリを終了して <code>config.json</code> を削除してください (ログイン情報は <code>WebView2Data*</code> に残ります)。</p>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>

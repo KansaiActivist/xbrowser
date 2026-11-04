@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>config.json リファレンス - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>config.json リファレンス</h1>
+<p class="lead"><code>%LocalAppData%\XBrowser\config.json</code> の項目です。初回起動時に自動で作られ、設定画面からの変更も自動保存されます。</p>
+<pre><code>{
+  "zoom": 1,
+  "notifications": "on",
+  "startPage": "simple",
+  "language": "ja",
+  "startBg": "black",
+  "startImage": "",
+  "themeSync": "on",
+  "profiles": ["仕事用"],
+  "profileNames": {},
+  "profileColors": {},
+  "theme": {
+    "preset": "dark",
+    "tabActive": "#2F3336",
+    "tabRadius": 12
+  }
+}</code></pre>
+<table>
+<tr><th>キー</th><th>値</th><th>説明</th></tr>
+<tr><td><code>zoom</code></td><td>0.25 〜 5</td><td>拡大率 (1 = 100%)</td></tr>
+<tr><td><code>notifications</code></td><td><code>on</code> / <code>off</code></td><td>デスクトップ通知の許可</td></tr>
+<tr><td><code>startPage</code></td><td><code>simple</code> / <code>x</code></td><td>新しいタブで開くページ</td></tr>
+<tr><td><code>language</code></td><td><code>ja</code> / <code>en</code> / <code>zh</code> / <code>ko</code> など</td><td>表示言語 (未設定なら OS から判定)</td></tr>
+<tr><td><code>startBg</code></td><td><code>white</code> / <code>black</code> / <code>image</code></td><td>スタートページの背景</td></tr>
+<tr><td><code>startImage</code></td><td>ファイル名</td><td>取り込んだ背景画像 (通常は設定画面から操作)</td></tr>
+<tr><td><code>themeSync</code></td><td><code>on</code> / <code>off</code></td><td>X の画面にもテーマを反映</td></tr>
+<tr><td><code>profiles</code></td><td>文字列の配列</td><td>追加したプロファイルの ID</td></tr>
+<tr><td><code>profileNames</code></td><td>ID → 表示名</td><td>プロファイルの表示名</td></tr>
+<tr><td><code>profileColors</code></td><td>ID → <code>#RRGGBB</code></td><td>プロファイルの色</td></tr>
+</table>
+<h2>theme</h2>
+<table>
+<tr><th>キー</th><th>説明</th></tr>
+<tr><td><code>preset</code></td><td><code>dark</code> / <code>light</code> / <code>system</code></td></tr>
+<tr><td><code>barBackground</code> <code>tabActive</code> <code>tabInactive</code> <code>tabHover</code></td><td>バーとタブの背景色</td></tr>
+<tr><td><code>tabText</code> <code>tabTextInactive</code></td><td>タブの文字色</td></tr>
+<tr><td><code>icon</code> <code>buttonHover</code> <code>closeHover</code> <code>closeHoverIcon</code></td><td>アイコンとボタンの色</td></tr>
+<tr><td><code>tabRadius</code></td><td>タブの角の丸み (2〜24px、既定 12)</td></tr>
+</table>
+<p>色は <code>#RRGGBB</code> 形式で、空文字の項目はプリセットの色が使われます。ファイルを直接編集した場合はアプリを再起動してください。</p>
+<h2>保存場所まとめ</h2>
+<table>
+<tr><th>パス</th><th>内容</th></tr>
+<tr><td><code>%LocalAppData%\XBrowser\config.json</code></td><td>設定</td></tr>
+<tr><td><code>%LocalAppData%\XBrowser\WebView2Data*</code></td><td>プロファイルごとのブラウザーデータ</td></tr>
+<tr><td><code>%LocalAppData%\XBrowser\StartBg</code></td><td>スタートページの背景画像</td></tr>
+<tr><td><code>%LocalAppData%\XBrowser\debug.log</code></td><td>デバッグログ</td></tr>
+</table>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>

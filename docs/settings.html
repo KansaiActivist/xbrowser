@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>設定画面 - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>設定画面</h1>
+<p class="lead">設定は X の設定画面のように、タブとして開きます。</p>
+<p>歯車ボタン、<kbd>Ctrl</kbd> + <kbd>,</kbd>、または右クリックメニューから開きます。すでに開いている場合はそのタブに切り替わります。変更はすぐ反映され、<code>config.json</code> に自動保存されます。</p>
+<h2>項目</h2>
+<table>
+<tr><th>セクション</th><th>できること</th></tr>
+<tr><td>一般</td><td>表示言語、新しいタブで開くページ (簡易スタートページ / X のホーム)、通知のオン/オフ</td></tr>
+<tr><td>外観</td><td>ダーク / ライト / システムに合わせる、「X の画面にも反映」、タブの角の丸み、各部の色、色の初期化</td></tr>
+<tr><td>スタートページ</td><td>背景を 白 / 黒 / 画像 から選択。画像はファイル選択ダイアログから取り込み</td></tr>
+<tr><td>表示</td><td>拡大・縮小・100% に戻す</td></tr>
+<tr><td>プロファイル</td><td>追加、名前変更、色変更、削除、プロファイルで新しいタブを開く</td></tr>
+<tr><td>設定ファイル</td><td><code>config.json</code> をメモ帳で開く</td></tr>
+</table>
+<h2>背景画像</h2>
+<ul>
+<li>対応形式: jpg / jpeg / png / gif / webp / bmp、20MB まで</li>
+<li>取り込んだ画像は <code>%LocalAppData%\XBrowser\StartBg</code> にコピーされます (元のファイルは変更されません)</li>
+<li>画像を選び直すと古い画像は自動で削除されます。「画像を削除」で白または黒の背景に戻ります</li>
+</ul>
+<h2>X の画面にもテーマを反映</h2>
+<p>オンにすると、アプリのテーマに合わせて X の表示設定 (クッキー <code>night_mode</code>: 0 = ライト、2 = ライツアウト) を書き換えてページを再読み込みします。無限に再読み込みしないよう、同じ目標値に対しては 1 回だけ試みます。</p>
+<div class="note"><b>うまく切り替わらないとき</b>X 側の仕様変更により効かない場合があります。その場合はこの項目をオフにして、X の「表示」設定で手動で変えてください。</div>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>
