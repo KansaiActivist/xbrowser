@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>xbrowser - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>xbrowser</h1>
+<p class="lead">X (旧Twitter) 専用の軽量Windowsデスクトップアプリ。Go + WebView2 製。</p>
+<p>xbrowser は、Windows に標準で入っている <b>Microsoft Edge WebView2</b> を使って X を表示する、タブ付きの小さなデスクトップアプリです。Chromium を丸ごと同梱する Electron 系と違い、ランタイムを共有するためメモリ消費が小さく済みます。</p>
+<div class="cards">
+<a href="features.html"><b>機能一覧</b><span>タブ、アドレスバー、プロファイル、テーマなど</span></a>
+<a href="usage.html"><b>基本操作</b><span>ショートカットと画面の見方</span></a>
+<a href="settings.html"><b>設定画面</b><span>タブとして開く X 風の設定</span></a>
+<a href="profiles.html"><b>プロファイル</b><span>複数アカウントの使い分け</span></a>
+<a href="build.html"><b>ビルド方法</b><span>go build だけで作れます</span></a>
+<a href="architecture.html"><b>仕組み・構成</b><span>ファイルごとの役割</span></a>
+</div>
+<h2>必要環境</h2>
+<ul>
+<li>Windows 10 / 11 (64bit)</li>
+<li><a href="https://developer.microsoft.com/microsoft-edge/webview2/">Microsoft Edge WebView2 Runtime</a> (Windows 11 やEdge搭載環境ではほぼ標準で入っています)</li>
+<li>ビルドする場合: Go 1.21 以降 (CGo 不要)</li>
+</ul>
+<h2>特長</h2>
+<ul>
+<li>タブごとに独立した WebView2 を持ち、軽量な枠なしカスタムウィンドウで動作</li>
+<li>X 以外のリンクや <code>t.co</code> は自動で既定のブラウザーで開く</li>
+<li>プロファイルごとにログイン状態を分離し、色と名前で見分けられる</li>
+<li>日本語 / English / 简体中文 / 한국어 に対応</li>
+</ul>
+<div class="note"><b>動作確認について</b>Windows 向けのビルドは確認済みですが、実機での動作確認は限定的です。アドレスバーの見た目、ドラッグ並び替えの操作感、X 側のテーマ連動や通知バッジは、X の仕様に依存する部分があります。</div>
+<div class="pager" id="pager"></div>
+</article></main>
+</div>
+<footer>xbrowser — X (Twitter) 専用の軽量Windowsデスクトップアプリ</footer>
+<script src="nav.js"></script>
+</body>
+</html>
