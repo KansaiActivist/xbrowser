@@ -38,6 +38,7 @@ type Config struct {
 	StartBg       string   `json:"startBg"`
 	StartImage    string   `json:"startImage"`
 
+	ThemeSync     string            `json:"themeSync"`
 	ProfileNames  map[string]string `json:"profileNames"`
 	ProfileColors map[string]string `json:"profileColors"`
 }
@@ -82,6 +83,7 @@ func loadConfig() {
 		Theme:         Theme{Preset: "dark"},
 		Notifications: "on",
 		StartPage:     "x",
+		ThemeSync:     "on",
 		Language:      detectLanguage(),
 	}
 	if b, err := os.ReadFile(configPath()); err == nil {
@@ -94,6 +96,9 @@ func loadConfig() {
 			}
 			cfg.StartBg = c.StartBg
 			cfg.ProfileNames = c.ProfileNames
+			if strings.ToLower(strings.TrimSpace(c.ThemeSync)) == "off" {
+				cfg.ThemeSync = "off"
+			}
 			cfg.ProfileColors = c.ProfileColors
 			cfg.StartImage = filepath.Base(strings.TrimSpace(c.StartImage))
 			if cfg.StartImage == "." || cfg.StartImage == string(filepath.Separator) {
@@ -120,7 +125,7 @@ func loadConfig() {
 
 	if cfg.StartBg != "white" && cfg.StartBg != "black" && cfg.StartBg != "image" {
 		cfg.StartBg = "black"
-		if strings.ToLower(strings.TrimSpace(cfg.Theme.Preset)) == "light" {
+		if effectivePreset() == "light" {
 			cfg.StartBg = "white"
 		}
 	}
@@ -160,10 +165,7 @@ func parseHex(s string, fallback win.COLORREF) win.COLORREF {
 
 func resolveTheme() {
 	t := cfg.Theme
-	base, ok := presets[strings.ToLower(t.Preset)]
-	if !ok {
-		base = presets["dark"]
-	}
+	base := presets[effectivePreset()]
 	palette.bar = parseHex(pick(t.BarBackground, base.BarBackground), parseHex(base.BarBackground, 0))
 	palette.tabActive = parseHex(pick(t.TabActive, base.TabActive), parseHex(base.TabActive, 0))
 	palette.tabInactive = parseHex(pick(t.TabInactive, base.TabInactive), parseHex(base.TabInactive, 0))

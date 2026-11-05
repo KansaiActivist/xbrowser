@@ -10,18 +10,22 @@ import (
 )
 
 const (
-	titleBarH    = 46
-	navBtnW      = 38
-	tabMinW      = 96
-	tabMaxW      = 240
-	tabGap       = 4
-	newTabBtnW   = 38
-	winBtnW      = 48
-	zoomBtnW     = 30
-	zoomLabelW   = 56
-	zoomClusterW = zoomBtnW*2 + zoomLabelW
-	settingsBtnW = 38
-	resizeGrip   = 6
+	titleBarH     = 46
+	toolbarH      = 44
+	chromeH       = titleBarH + toolbarH
+	themeBtnW     = 38
+	dragThreshold = 6
+	navBtnW       = 38
+	tabMinW       = 96
+	tabMaxW       = 240
+	tabGap        = 4
+	newTabBtnW    = 38
+	winBtnW       = 48
+	zoomBtnW      = 30
+	zoomLabelW    = 56
+	zoomClusterW  = zoomBtnW*2 + zoomLabelW
+	settingsBtnW  = 38
+	resizeGrip    = 6
 
 	sizeMinimized    = 1
 	smCXPaddedBorder = 92
@@ -49,6 +53,8 @@ const (
 	zoneZoomLabel
 	zoneZoomIn
 	zoneSettings
+	zoneTheme
+	zoneAddress
 )
 
 type ChromeWindow struct {
@@ -57,12 +63,16 @@ type ChromeWindow struct {
 	hovered  hitZone
 	hoverTab int
 	tracking bool
+	dragIdx  int
+	dragX0   int32
+	dragging bool
 }
 
 var app *ChromeWindow
 
 func initChromeWindow(hwnd win.HWND) {
-	app = &ChromeWindow{hwnd: hwnd, hoverTab: -1}
+	app = &ChromeWindow{hwnd: hwnd, hoverTab: -1, dragIdx: -1}
+	createAddressBar(hwnd)
 	app.tabs = newTabManager(hwnd)
 
 	app.layout()
@@ -73,7 +83,7 @@ func initChromeWindow(hwnd win.HWND) {
 func (c *ChromeWindow) contentRect() win.RECT {
 	var rc win.RECT
 	win.GetClientRect(c.hwnd, &rc)
-	rc.Top = titleBarH
+	rc.Top = chromeH
 	return rc
 }
 
@@ -81,6 +91,7 @@ func (c *ChromeWindow) layout() {
 	if c.tabs != nil {
 		c.tabs.Resize(c.contentRect())
 	}
+	layoutAddressBar()
 	win.InvalidateRect(c.hwnd, nil, false)
 }
 
@@ -89,8 +100,8 @@ func (c *ChromeWindow) tabRects() []win.RECT {
 	win.GetClientRect(c.hwnd, &client)
 	width := int32(client.Right - client.Left)
 
-	left := int32(navBtnW*3 + 6)
-	right := width - int32(winBtnW*3+zoomClusterW+settingsBtnW+14)
+	left := int32(8)
+	right := width - int32(winBtnW*3+14)
 	avail := right - left - newTabBtnW
 	if avail < 0 {
 		avail = 0
@@ -119,7 +130,7 @@ func (c *ChromeWindow) tabRects() []win.RECT {
 
 func (c *ChromeWindow) newTabBtnRect() win.RECT {
 	rects := c.tabRects()
-	x := int32(navBtnW*3 + 6)
+	x := int32(8)
 	if len(rects) > 0 {
 		x = rects[len(rects)-1].Right + tabGap
 	}
@@ -144,11 +155,11 @@ func (c *ChromeWindow) winButtonRect(which hitZone) win.RECT {
 func (c *ChromeWindow) navButtonRect(which hitZone) win.RECT {
 	switch which {
 	case zoneBack:
-		return win.RECT{Left: 0, Top: 0, Right: navBtnW, Bottom: titleBarH}
+		return win.RECT{Left: 6, Top: titleBarH, Right: 6 + navBtnW, Bottom: chromeH}
 	case zoneForward:
-		return win.RECT{Left: navBtnW, Top: 0, Right: navBtnW * 2, Bottom: titleBarH}
+		return win.RECT{Left: 6 + navBtnW, Top: titleBarH, Right: 6 + navBtnW*2, Bottom: chromeH}
 	case zoneReload:
-		return win.RECT{Left: navBtnW * 2, Top: 0, Right: navBtnW * 3, Bottom: titleBarH}
+		return win.RECT{Left: 6 + navBtnW*2, Top: titleBarH, Right: 6 + navBtnW*3, Bottom: chromeH}
 	}
 	return win.RECT{}
 }
@@ -164,12 +175,15 @@ func tabCloseRect(slot win.RECT) win.RECT {
 	return win.RECT{Left: vr.Right - 8 - sz, Top: top, Right: vr.Right - 8, Bottom: top + sz}
 }
 
-func (c *ChromeWindow) zoomRect(which hitZone) win.RECT {
+func (c *ChromeWindow) clientWidth() int32 {
 	var client win.RECT
 	win.GetClientRect(c.hwnd, &client)
-	width := client.Right - client.Left
-	base := width - int32(winBtnW*3+zoomClusterW+settingsBtnW+6)
-	top, bottom := int32(9), int32(titleBarH-9)
+	return client.Right - client.Left
+}
+
+func (c *ChromeWindow) zoomRect(which hitZone) win.RECT {
+	base := c.clientWidth() - 8 - int32(settingsBtnW+themeBtnW+zoomClusterW)
+	top, bottom := int32(titleBarH+7), int32(chromeH-7)
 	switch which {
 	case zoneZoomOut:
 		return win.RECT{Left: base, Top: top, Right: base + zoomBtnW, Bottom: bottom}
@@ -181,16 +195,43 @@ func (c *ChromeWindow) zoomRect(which hitZone) win.RECT {
 	return win.RECT{}
 }
 
+func (c *ChromeWindow) themeRect() win.RECT {
+	left := c.clientWidth() - 8 - int32(settingsBtnW+themeBtnW)
+	return win.RECT{Left: left, Top: titleBarH, Right: left + themeBtnW, Bottom: chromeH}
+}
+
 func (c *ChromeWindow) settingsRect() win.RECT {
-	var client win.RECT
-	win.GetClientRect(c.hwnd, &client)
-	width := client.Right - client.Left
-	left := width - int32(winBtnW*3+settingsBtnW)
-	return win.RECT{Left: left, Top: 0, Right: left + settingsBtnW, Bottom: titleBarH}
+	left := c.clientWidth() - 8 - int32(settingsBtnW)
+	return win.RECT{Left: left, Top: titleBarH, Right: left + settingsBtnW, Bottom: chromeH}
+}
+
+func (c *ChromeWindow) addressRect() win.RECT {
+	left := int32(6+navBtnW*3) + 4
+	right := c.zoomRect(zoneZoomOut).Left - 8
+	if right < left+120 {
+		right = left + 120
+	}
+	return win.RECT{Left: left, Top: titleBarH + 6, Right: right, Bottom: chromeH - 6}
+}
+
+func (c *ChromeWindow) tabIndexAt(x int32) int {
+	rects := c.tabRects()
+	if len(rects) == 0 {
+		return -1
+	}
+	slot := rects[0].Right - rects[0].Left + tabGap
+	i := int((x - rects[0].Left) / slot)
+	if x < rects[0].Left {
+		i = 0
+	}
+	if i >= len(rects) {
+		i = len(rects) - 1
+	}
+	return i
 }
 
 func invalidateBar() {
-	r := win.RECT{Left: 0, Top: 0, Right: 32000, Bottom: titleBarH}
+	r := win.RECT{Left: 0, Top: 0, Right: 32000, Bottom: chromeH}
 	win.InvalidateRect(app.hwnd, &r, false)
 }
 
@@ -199,7 +240,7 @@ func ptInRect(r win.RECT, x, y int32) bool {
 }
 
 func (c *ChromeWindow) hitTest(x, y int32) (hitZone, int) {
-	if y >= titleBarH {
+	if y >= chromeH {
 		return zoneNone, -1
 	}
 	if ptInRect(c.navButtonRect(zoneBack), x, y) {
@@ -221,6 +262,12 @@ func (c *ChromeWindow) hitTest(x, y int32) (hitZone, int) {
 	}
 	if ptInRect(c.settingsRect(), x, y) {
 		return zoneSettings, -1
+	}
+	if ptInRect(c.themeRect(), x, y) {
+		return zoneTheme, -1
+	}
+	if ptInRect(c.addressRect(), x, y) {
+		return zoneAddress, -1
 	}
 	if ptInRect(c.winButtonRect(zoneMinimize), x, y) {
 		return zoneMinimize, -1
@@ -316,6 +363,10 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 			app.tabs.AddTab(newTabURL(), pendingProfile)
 		case actPickImage:
 			pickBackgroundImage()
+		case actFocusAddress:
+			focusAddress()
+		case actToggleTheme:
+			toggleTheme()
 		}
 		app.layout()
 		return 0
@@ -323,7 +374,7 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	case win.WM_RBUTTONUP:
 		x := int32(int16(lParam & 0xffff))
 		y := int32(int16((lParam >> 16) & 0xffff))
-		if y < titleBarH {
+		if y < chromeH {
 			showContextMenu(hwnd, x, y)
 		}
 		return 0
@@ -365,6 +416,12 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 		case zoneTab:
 			app.tabs.Switch(idx)
 			app.layout()
+			app.dragIdx, app.dragX0, app.dragging = idx, x, false
+			win.SetCapture(hwnd)
+		case zoneTheme:
+			toggleTheme()
+		case zoneAddress:
+			focusAddress()
 		case zoneTabClose:
 			app.tabs.Close(idx)
 			app.layout()
@@ -389,6 +446,38 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 		}
 		return 0
 
+	case win.WM_LBUTTONUP, win.WM_CAPTURECHANGED:
+		if app.dragIdx >= 0 {
+			app.dragIdx, app.dragging = -1, false
+			if msg == win.WM_LBUTTONUP {
+				win.ReleaseCapture()
+			}
+			invalidateBar()
+		}
+		return 0
+
+	case win.WM_CTLCOLOREDIT:
+		if win.HWND(lParam) == addrEdit {
+			return addrCtlColor(win.HDC(wParam))
+		}
+
+	case win.WM_COMMAND:
+		if win.HWND(lParam) == addrEdit {
+			switch (wParam >> 16) & 0xffff {
+			case enSetFocus:
+				win.InvalidateRect(addrEdit, nil, true)
+				invalidateBar()
+			case enKillFocus:
+				refreshAddress(true)
+				win.InvalidateRect(addrEdit, nil, true)
+				invalidateBar()
+			}
+		}
+		return 0
+
+	case win.WM_SETTINGCHANGE:
+		systemThemeChanged()
+
 	case win.WM_LBUTTONDBLCLK:
 		x := int32(int16(lParam & 0xffff))
 		y := int32(int16((lParam >> 16) & 0xffff))
@@ -401,6 +490,22 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	case win.WM_MOUSEMOVE:
 		x := int32(int16(lParam & 0xffff))
 		y := int32(int16((lParam >> 16) & 0xffff))
+		if app.dragIdx >= 0 && wParam&win.MK_LBUTTON != 0 {
+			d := x - app.dragX0
+			if d < 0 {
+				d = -d
+			}
+			if app.dragging || d >= dragThreshold {
+				app.dragging = true
+				if to := app.tabIndexAt(x); to >= 0 && to != app.dragIdx {
+					app.tabs.MoveTab(app.dragIdx, to)
+					app.dragIdx = to
+				}
+				app.hovered, app.hoverTab = zoneTab, app.dragIdx
+				invalidateBar()
+				return 0
+			}
+		}
 		zone, idx := app.hitTest(x, y)
 		if zone != app.hovered || idx != app.hoverTab {
 			app.hovered = zone
@@ -485,7 +590,7 @@ func maximizedClientRect(hwnd win.HWND, lParam uintptr) {
 }
 
 func repaintBar() {
-	r := win.RECT{Left: 0, Top: 0, Right: 32000, Bottom: titleBarH}
+	r := win.RECT{Left: 0, Top: 0, Right: 32000, Bottom: chromeH}
 	win.RedrawWindow(app.hwnd, &r, 0, win.RDW_INVALIDATE|win.RDW_UPDATENOW)
 }
 

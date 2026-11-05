@@ -228,10 +228,13 @@ input[type=range] { flex:1; accent-color:var(--accent); }
   }
 
   function buildAppearance(p) {
-    var light = state.preset === 'light';
+    var mode = state.presetMode || 'dark';
     p.appendChild(title(t('theme_title')));
-    p.appendChild(radioRow(t('theme_dark'), null, !light, function () { set('preset', 'dark'); }));
-    p.appendChild(radioRow(t('theme_light'), t('theme_hint'), light, function () { set('preset', 'light'); }));
+    p.appendChild(radioRow(t('theme_dark'), null, mode === 'dark', function () { set('preset', 'dark'); }));
+    p.appendChild(radioRow(t('theme_light'), null, mode === 'light', function () { set('preset', 'light'); }));
+    p.appendChild(radioRow(t('theme_system'), t('theme_system_hint'), mode === 'system', function () { set('preset', 'system'); }));
+    p.appendChild(lead(t('theme_hint')));
+    p.appendChild(toggleRow(t('sync_label'), t('sync_hint'), state.themeSync !== 'off', function (v) { set('themeSync', v ? 'on' : 'off'); }));
     p.appendChild(divider());
 
     p.appendChild(title(t('radius_title')));

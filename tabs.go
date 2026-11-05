@@ -5,6 +5,8 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"regexp"
+	"strconv"
 	"syscall"
 	"unsafe"
 
@@ -26,13 +28,15 @@ func registerTabContainerClass(hInstance win.HINSTANCE) {
 }
 
 type Tab struct {
-	hwnd     win.HWND
-	chromium *edge.Chromium
-	title    string
-	url      string
-	profile  string
-	ready    bool
-	kind     string
+	hwnd       win.HWND
+	chromium   *edge.Chromium
+	title      string
+	url        string
+	profile    string
+	ready      bool
+	themeTried string
+	badge      int
+	kind       string
 }
 
 func (t *Tab) Eval(js string) {
@@ -99,6 +103,14 @@ func (m *TabManager) AddTab(url string, profile string) {
 		case 0x30, 0x60:
 			m.ZoomReset()
 			return true
+		case 0x4C:
+			win.PostMessage(app.hwnd, wmAppAction, actFocusAddress, 0)
+			return true
+		case 0x44:
+			if win.GetKeyState(win.VK_SHIFT) < 0 {
+				win.PostMessage(app.hwnd, wmAppAction, actToggleTheme, 0)
+				return true
+			}
 		case 0xBC:
 			win.PostMessage(app.hwnd, wmAppAction, actOpenSettings, 0)
 			return true
@@ -187,6 +199,7 @@ func (m *TabManager) Switch(i int) {
 		m.tabs[i].chromium.Focus()
 		m.tabs[i].pushState()
 	}
+	refreshAddress(false)
 }
 
 func (m *TabManager) Refresh() {
@@ -253,7 +266,7 @@ func handleTabMessage(tab *Tab, raw string) {
 		openExternal(msg.Data)
 	case "title":
 		if tab.kind == kindWeb {
-			tab.title = msg.Data
+			tab.title = badgePrefix.ReplaceAllString(msg.Data, "")
 			win.InvalidateRect(app.hwnd, nil, false)
 		}
 	case "zoom":
@@ -268,7 +281,17 @@ func handleTabMessage(tab *Tab, raw string) {
 	case "url":
 		if tab.kind == kindWeb {
 			tab.url = msg.Data
+			if tab == app.tabs.Active() {
+				refreshAddress(false)
+			}
 		}
+	case "badge":
+		if n, err := strconv.Atoi(msg.Data); err == nil && n >= 0 && n != tab.badge {
+			tab.badge = n
+			invalidateBar()
+		}
+	case "theme_cookie":
+		tab.syncWebTheme(msg.Data)
 
 	case "start_nav":
 		if tab.kind == kindStart && isXURL(msg.Data) {
@@ -287,5 +310,25 @@ func handleTabMessage(tab *Tab, raw string) {
 		if tab.kind == kindSettings {
 			handleSettingsAction(tab, msg.Data)
 		}
+	}
+}
+
+var badgePrefix = regexp.MustCompile(`^\(\d+\)\s*`)
+
+func (m *TabManager) MoveTab(from, to int) {
+	if from == to || from < 0 || to < 0 || from >= len(m.tabs) || to >= len(m.tabs) {
+		return
+	}
+	t := m.tabs[from]
+	rest := append(append([]*Tab{}, m.tabs[:from]...), m.tabs[from+1:]...)
+	m.tabs = append(append(append([]*Tab{}, rest[:to]...), t), rest[to:]...)
+	a := m.active
+	switch {
+	case a == from:
+		m.active = to
+	case from < a && a <= to:
+		m.active--
+	case to <= a && a < from:
+		m.active++
 	}
 }

@@ -35,6 +35,8 @@ const (
 	actOpenSettings = 1
 	actOpenProfile  = 2
 	actPickImage    = 3
+	actFocusAddress = 4
+	actToggleTheme  = 5
 )
 
 var pendingProfile string
@@ -100,12 +102,7 @@ func themeFields() []themeField {
 	}
 }
 
-func presetName() string {
-	if strings.ToLower(strings.TrimSpace(cfg.Theme.Preset)) == "light" {
-		return "light"
-	}
-	return "dark"
-}
+func presetName() string { return effectivePreset() }
 
 func settingsState() map[string]any {
 	colors := map[string]string{}
@@ -117,6 +114,8 @@ func settingsState() map[string]any {
 		"notifications": cfg.Notifications,
 		"zoom":          cfg.Zoom,
 		"preset":        presetName(),
+		"presetMode":    themeMode(),
+		"themeSync":     cfg.ThemeSync,
 		"radius":        palette.radius,
 		"colors":        colors,
 		"profiles":      profileStates(),
@@ -261,10 +260,19 @@ func handleSettingsSet(tab *Tab, data string) {
 			app.tabs.applyNotificationSettingAll()
 		}
 	case "preset":
-		if str == "dark" || str == "light" {
+		if str == "dark" || str == "light" || str == "system" {
 
 			cfg.Theme = Theme{Preset: str, TabRadius: cfg.Theme.TabRadius}
-			applyTheme(true)
+			themeApplied()
+			return
+		}
+	case "themeSync":
+		if str == "on" || str == "off" {
+			cfg.ThemeSync = str
+			saveConfig()
+			if str == "on" {
+				applyWebThemeAll()
+			}
 		}
 	case "tabRadius":
 		var n int

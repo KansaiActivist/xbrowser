@@ -29,8 +29,8 @@ func makeFont(face string, height int32, weight int32) win.HFONT {
 }
 
 type painter struct {
-	hdc                                    win.HDC
-	fText, fTextBold, fIcon, fIconS, fZoom win.HFONT
+	hdc                                            win.HDC
+	fText, fTextBold, fIcon, fIconS, fZoom, fBadge win.HFONT
 }
 
 func (p *painter) fill(r win.RECT, col win.COLORREF) {
@@ -85,7 +85,7 @@ func paintChrome(hwnd win.HWND) {
 
 	var client win.RECT
 	win.GetClientRect(hwnd, &client)
-	w, h := client.Right-client.Left, int32(titleBarH)
+	w, h := client.Right-client.Left, int32(chromeH)
 
 	mem := win.CreateCompatibleDC(hdc)
 	bmp := win.CreateCompatibleBitmap(hdc, w, h)
@@ -99,19 +99,22 @@ func paintChrome(hwnd win.HWND) {
 		fIcon:     makeFont(iconFace, -14, win.FW_NORMAL),
 		fIconS:    makeFont(iconFace, -10, win.FW_NORMAL),
 		fZoom:     makeFont("Segoe UI", -13, 600),
+		fBadge:    makeFont("Segoe UI", -11, 700),
 	}
 
 	p.fill(win.RECT{Left: 0, Top: 0, Right: w, Bottom: h}, palette.bar)
 	p.drawNav()
+	p.drawAddress()
 	p.drawTabs()
 	p.drawNewTab()
 	p.drawZoom()
+	p.drawTheme()
 	p.drawSettings()
 	p.drawWindowButtons()
 
 	win.BitBlt(hdc, 0, 0, w, h, mem, 0, 0, win.SRCCOPY)
 
-	for _, f := range []win.HFONT{p.fText, p.fTextBold, p.fIcon, p.fIconS, p.fZoom} {
+	for _, f := range []win.HFONT{p.fText, p.fTextBold, p.fIcon, p.fIconS, p.fZoom, p.fBadge} {
 		win.DeleteObject(win.HGDIOBJ(f))
 	}
 	win.SelectObject(mem, oldBmp)
@@ -136,6 +139,44 @@ func (p *painter) drawNav() {
 		p.hoverPill(it.z, pill)
 		p.icon(slot, it.g, palette.icon, false)
 	}
+}
+
+func (p *painter) drawAddress() {
+	r := app.addressRect()
+	p.round(r, (r.Bottom-r.Top)/2, addrPillColor())
+	p.icon(win.RECT{Left: r.Left + 6, Top: r.Top, Right: r.Left + 36, Bottom: r.Bottom}, "\uE774", palette.tabTextInactive, true)
+}
+
+func (p *painter) drawTheme() {
+	slot := app.themeRect()
+	p.hoverPill(zoneTheme, inset(slot, 3, 8))
+	glyph := "\uE708"
+	if effectivePreset() == "dark" {
+		glyph = "\uE706"
+	}
+	p.icon(slot, glyph, palette.icon, false)
+}
+
+func (p *painter) badge(r win.RECT, n int) {
+	p.round(r, (r.Bottom-r.Top)/2, rgb(0xF4, 0x21, 0x2E))
+	p.text(r, badgeText(n), rgb(0xFF, 0xFF, 0xFF), p.fBadge, win.DT_CENTER)
+}
+
+func badgeText(n int) string {
+	if n > 99 {
+		return "99+"
+	}
+	return fmt.Sprintf("%d", n)
+}
+
+func badgeWidth(n int) int32 {
+	if n > 99 {
+		return 30
+	}
+	if n > 9 {
+		return 24
+	}
+	return 18
 }
 
 func (p *painter) drawNewTab() {
@@ -173,7 +214,14 @@ func (p *painter) drawTabs() {
 			p.round(win.RECT{Left: vr.Left + 10, Top: dotTop, Right: vr.Left + 10 + d, Bottom: dotTop + d}, d/2, dot)
 			textLeft = vr.Left + 26
 		}
-		tr := win.RECT{Left: textLeft, Top: vr.Top, Right: cr.Left - 4, Bottom: vr.Bottom}
+		textRight := cr.Left - 4
+		if tab.badge > 0 {
+			bw := badgeWidth(tab.badge)
+			bt := vr.Top + (vr.Bottom-vr.Top-18)/2
+			p.badge(win.RECT{Left: cr.Left - 4 - bw, Top: bt, Right: cr.Left - 4, Bottom: bt + 18}, tab.badge)
+			textRight = cr.Left - 4 - bw - 4
+		}
+		tr := win.RECT{Left: textLeft, Top: vr.Top, Right: textRight, Bottom: vr.Bottom}
 		p.text(tr, title, txt, font, win.DT_LEFT|win.DT_END_ELLIPSIS)
 
 		if app.hovered == zoneTabClose && app.hoverTab == i {
