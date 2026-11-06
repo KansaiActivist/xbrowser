@@ -2,7 +2,9 @@
 
 package main
 
-const injectedJS = `
+import "strings"
+
+const injectedJSTemplate = `
 (function () {
   if (window.__xbrowser_injected) return;
   window.__xbrowser_injected = true;
@@ -15,7 +17,7 @@ const injectedJS = `
     host = (host || '').toLowerCase();
     for (var i = 0; i < ALLOWED_SUFFIXES.length; i++) {
       var s = ALLOWED_SUFFIXES[i];
-      if (host === s || host.indexOf('.' + s) === host.length - s.length - 1) {
+      if (host === s || (host.length > s.length && host.slice(-(s.length + 1)) === '.' + s)) {
         return true;
       }
     }
@@ -28,40 +30,143 @@ const injectedJS = `
     } catch (e) {}
   }
 
-  document.addEventListener('click', function (e) {
-    var el = e.target;
-    while (el && el.tagName !== 'A') el = el.parentElement;
-    if (!el || !el.href) return;
+  function onLinkClick(e) {
+    var el = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!el) return;
     var u;
     try {
-      u = new URL(el.href, location.href);
+      u = new URL(el.getAttribute('href'), location.href);
     } catch (err) {
       return;
     }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return;
     if (!isAllowedHost(u.hostname)) {
       e.preventDefault();
       e.stopPropagation();
       post('open_external', u.href);
       return;
     }
-    if (el.target && el.target !== '' && el.target.toLowerCase() !== '_self') {
+    if (e.type === 'auxclick' || e.ctrlKey || e.shiftKey || e.metaKey || (el.target && el.target.toLowerCase() !== '_self')) {
       e.preventDefault();
       e.stopPropagation();
-      location.href = u.href;
+      if (e.type === 'click') location.href = u.href;
     }
-  }, true);
+  }
+  document.addEventListener('click', onLinkClick, true);
+  document.addEventListener('auxclick', onLinkClick, true);
 
-  window.open = function (url, target, features) {
+  window.open = function (url) {
     try {
       var u = new URL(url, location.href);
-      if (!isAllowedHost(u.hostname)) {
-        post('open_external', u.href);
-      } else {
-        location.href = u.href;
+      if (u.protocol === 'http:' || u.protocol === 'https:') {
+        if (!isAllowedHost(u.hostname)) {
+          post('open_external', u.href);
+        } else {
+          location.href = u.href;
+        }
       }
     } catch (e) {}
     return null;
   };
+
+  var LABELS = {
+    ja: { copy: 'コピー', translate: '翻訳' },
+    en: { copy: 'Copy', translate: 'Translate' },
+    zh: { copy: '复制', translate: '翻译' },
+    ko: { copy: '복사', translate: '번역' }
+  };
+  var MAX_TEXT = 2000;
+  var menuHost = null;
+
+  function closeMenu() {
+    if (menuHost) { menuHost.remove(); menuHost = null; }
+  }
+  function isDarkPage() {
+    var c = (getComputedStyle(document.body).backgroundColor || '').match(/\d+/g);
+    return c ? (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) < 128 : false;
+  }
+  function copyText(text) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      ta.remove();
+    }
+    try {
+      navigator.clipboard.writeText(text).catch(fallback);
+    } catch (e) {
+      fallback();
+    }
+  }
+  function showMenu(x, y, text) {
+    closeMenu();
+    var L = LABELS[window.__xb_lang || '__XB_LANG__'] || LABELS.en;
+    var dark = isDarkPage();
+    menuHost = document.createElement('div');
+    menuHost.style.cssText = 'all:initial;position:fixed;left:0;top:0;z-index:2147483647';
+    var root = menuHost.attachShadow({ mode: 'closed' });
+    var style = document.createElement('style');
+    style.textContent =
+      '.m{position:fixed;min-width:150px;padding:6px;border-radius:12px;box-sizing:border-box;' +
+      'font:14px "Segoe UI","Yu Gothic UI","Microsoft YaHei UI","Malgun Gothic",system-ui,sans-serif;' +
+      'box-shadow:0 4px 18px rgba(0,0,0,.35);border:1px solid ' + (dark ? '#2F3336' : '#CFD9DE') + ';' +
+      'background:' + (dark ? '#000' : '#fff') + ';color:' + (dark ? '#E7E9EA' : '#0F1419') + '}' +
+      '.i{padding:9px 12px;border-radius:8px;cursor:pointer;user-select:none}' +
+      '.i:hover{background:' + (dark ? '#16181C' : '#EFF3F4') + '}';
+    var box = document.createElement('div');
+    box.className = 'm';
+    [[L.copy, function () { copyText(text); }],
+     [L.translate, function () { post('translate', text); }]].forEach(function (it) {
+      var d = document.createElement('div');
+      d.className = 'i';
+      d.textContent = it[0];
+      d.addEventListener('click', function () { it[1](); closeMenu(); });
+      box.appendChild(d);
+    });
+    box.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    root.appendChild(style);
+    root.appendChild(box);
+    document.documentElement.appendChild(menuHost);
+    var r = box.getBoundingClientRect();
+    box.style.left = Math.max(0, Math.min(x, window.innerWidth - r.width - 4)) + 'px';
+    box.style.top = Math.max(0, Math.min(y, window.innerHeight - r.height - 4)) + 'px';
+  }
+  function editable(el) {
+    return !!(el && el.closest && el.closest('input,textarea,[contenteditable=""],[contenteditable="true"]'));
+  }
+  document.addEventListener('contextmenu', function (e) {
+    if (editable(e.target)) { closeMenu(); return; }
+    var sel = window.getSelection();
+    var text = sel ? sel.toString().trim() : '';
+    if (!(text && sel.containsNode(e.target, true))) {
+      var tw = e.target.closest ? e.target.closest('[data-testid="tweetText"]') : null;
+      text = tw ? (tw.innerText || '').trim() : '';
+    }
+    if (!text) { closeMenu(); return; }
+    e.preventDefault();
+    showMenu(e.clientX, e.clientY, text.slice(0, MAX_TEXT));
+  }, true);
+  document.addEventListener('mousedown', function (e) {
+    if (menuHost && e.target !== menuHost) closeMenu();
+  }, true);
+  window.addEventListener('blur', closeMenu);
+  window.addEventListener('resize', closeMenu);
+  window.addEventListener('scroll', closeMenu, true);
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); }, true);
+
+  var lastSel = '';
+  var selTimer = 0;
+  document.addEventListener('selectionchange', function () {
+    clearTimeout(selTimer);
+    selTimer = setTimeout(function () {
+      var s = window.getSelection();
+      var t = s ? s.toString().trim().slice(0, MAX_TEXT) : '';
+      if (t !== lastSel) { lastSel = t; post('selection', t); }
+    }, 300);
+  });
 
   var lastWheel = 0;
   window.addEventListener('wheel', function (e) {
@@ -123,3 +228,7 @@ const injectedJS = `
   reportTitle();
 })();
 `
+
+func injectScript() string {
+	return strings.Replace(injectedJSTemplate, "__XB_LANG__", cfg.Language, 1)
+}

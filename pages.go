@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/lxn/win"
@@ -239,6 +240,8 @@ func handleSettingsSet(tab *Tab, data string) {
 			for _, t := range app.tabs.tabs {
 				if t.kind != kindWeb {
 					t.title = t.localTitle()
+				} else if t.ready {
+					t.Eval("window.__xb_lang=" + strconv.Quote(cfg.Language))
 				}
 			}
 			invalidateBar()
@@ -318,14 +321,11 @@ func handleSettingsAction(tab *Tab, data string) {
 		cfg.Theme = Theme{Preset: cfg.Theme.Preset}
 		applyTheme(true)
 	case "add_profile":
-		switch {
-		case name == "":
+		if name == "" {
 			return
-		case strings.EqualFold(name, "Default") || profileExists(name):
-			tab.toast(T("toast_exists", name))
-			return
-		case len([]rune(name)) > 30:
-			tab.toast(T("toast_toolong"))
+		}
+		if key := validateNewProfile(name); key != "" {
+			tab.toast(T(key, name))
 			return
 		}
 		addProfile(name)

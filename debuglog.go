@@ -9,11 +9,18 @@ import (
 	"time"
 )
 
+const maxDebugLogBytes = 1 << 20
+
 var debugLogFile *os.File
 
 func initDebugLog(baseDir string) {
 	_ = os.MkdirAll(baseDir, 0o755)
-	f, err := os.OpenFile(filepath.Join(baseDir, "debug.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	path := filepath.Join(baseDir, "debug.log")
+	flags := os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	if st, err := os.Stat(path); err == nil && st.Size() > maxDebugLogBytes {
+		flags = os.O_TRUNC | os.O_CREATE | os.O_WRONLY
+	}
+	f, err := os.OpenFile(path, flags, 0o600)
 	if err == nil {
 		debugLogFile = f
 	}

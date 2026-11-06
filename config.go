@@ -78,7 +78,7 @@ func configPath() string { return filepath.Join(appBaseDir(), "config.json") }
 func loadConfig() {
 	_ = os.MkdirAll(appBaseDir(), 0o755)
 	cfg = Config{
-		Comment:       "色は #RRGGBB 形式。空文字は preset(dark/light) の色を使う。tabRadius は角の丸み(px)。notifications は on/off。startPage は x(Xの画面)/simple(簡易スタートページ)。language は ja/en/zh/ko。startBg は white/black/image(スタートページの背景)。設定はアプリ内の「設定」タブからも変更できる。変更後はアプリを再起動(通知は右クリメニューからも切替可)。",
+		Comment:       "色は #RRGGBB 形式。空文字は preset(dark/light/system) の色を使う。tabRadius は角の丸み(2〜24px)。notifications と themeSync は on/off。startPage は x(Xの画面)/simple(簡易スタートページ)。language は ja/en/zh/ko。startBg は white/black/image(スタートページの背景)。設定はアプリ内の「設定」タブからも変更できる。ファイルを直接編集したときはアプリを再起動する。",
 		Zoom:          1.0,
 		Theme:         Theme{Preset: "dark"},
 		Notifications: "on",
@@ -108,6 +108,9 @@ func loadConfig() {
 				cfg.Zoom = c.Zoom
 			}
 			cfg.Theme = c.Theme
+			if cfg.Theme.TabRadius < 0 || cfg.Theme.TabRadius > 24 {
+				cfg.Theme.TabRadius = 0
+			}
 			if strings.ToLower(strings.TrimSpace(c.Notifications)) == "off" {
 				cfg.Notifications = "off"
 			}
@@ -116,7 +119,17 @@ func loadConfig() {
 			}
 			for _, p := range c.Profiles {
 				p = strings.TrimSpace(p)
-				if p != "" && !strings.EqualFold(p, "Default") {
+				if p == "" || strings.EqualFold(p, "Default") || len([]rune(p)) > maxProfileNameLen || len(cfg.Profiles) >= maxProfiles {
+					continue
+				}
+				dup := false
+				for _, q := range cfg.Profiles {
+					if strings.EqualFold(p, q) {
+						dup = true
+						break
+					}
+				}
+				if !dup {
 					cfg.Profiles = append(cfg.Profiles, p)
 				}
 			}
@@ -139,8 +152,15 @@ func loadConfig() {
 
 func saveConfig() {
 	b, err := json.MarshalIndent(cfg, "", "  ")
-	if err == nil {
-		_ = os.WriteFile(configPath(), b, 0o644)
+	if err != nil {
+		return
+	}
+	tmp := configPath() + ".tmp"
+	if err := os.WriteFile(tmp, b, 0o600); err != nil {
+		return
+	}
+	if err := os.Rename(tmp, configPath()); err != nil {
+		_ = os.Remove(tmp)
 	}
 }
 

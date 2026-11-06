@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -37,6 +38,7 @@ type Tab struct {
 	themeTried string
 	badge      int
 	kind       string
+	selection  string
 }
 
 func (t *Tab) Eval(js string) {
@@ -146,7 +148,7 @@ func (m *TabManager) AddTab(url string, profile string) {
 
 	applyNotificationSetting(chromium)
 
-	chromium.Init(injectedJS)
+	chromium.Init(injectScript())
 	if tab.kind != kindWeb {
 		debugLog("ローカルページ表示 kind=%s", tab.kind)
 		mapBackgroundHost(chromium)
@@ -165,7 +167,7 @@ func (m *TabManager) SwitchTabProfile(idx int, profile string) {
 		return
 	}
 	url := m.tabs[idx].url
-	if url == "" {
+	if url == "" || (!isLocalURL(url) && !isHTTPURL(url)) {
 		url = homeURL
 	}
 	win.DestroyWindow(m.tabs[idx].hwnd)
@@ -250,23 +252,54 @@ func (m *TabManager) resizeActive() {
 	}
 }
 
+const maxMessageLen = 64 * 1024
+
+func truncateRunes(s string, n int) string {
+	r := []rune(s)
+	if len(r) > n {
+		return string(r[:n])
+	}
+	return s
+}
+
+func isHTTPURL(raw string) bool {
+	if len(raw) > maxExternalURLLen {
+		return false
+	}
+	u, err := url.Parse(raw)
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Hostname() != ""
+}
+
 type tabMessage struct {
 	Type string `json:"type"`
 	Data string `json:"data"`
 }
 
 func handleTabMessage(tab *Tab, raw string) {
-	debugLog("MessageCallback raw=%s", raw)
+	if len(raw) > maxMessageLen {
+		return
+	}
 	var msg tabMessage
 	if err := json.Unmarshal([]byte(raw), &msg); err != nil {
 		return
 	}
+	debugLog("MessageCallback type=%s", msg.Type)
 	switch msg.Type {
 	case "open_external":
-		openExternal(msg.Data)
+		if tab.kind == kindWeb {
+			openExternal(msg.Data)
+		}
+	case "translate":
+		if tab.kind == kindWeb {
+			translateText(msg.Data)
+		}
+	case "selection":
+		if tab.kind == kindWeb {
+			tab.selection = cleanSelection(msg.Data)
+		}
 	case "title":
 		if tab.kind == kindWeb {
-			tab.title = badgePrefix.ReplaceAllString(msg.Data, "")
+			tab.title = truncateRunes(badgePrefix.ReplaceAllString(msg.Data, ""), 200)
 			win.InvalidateRect(app.hwnd, nil, false)
 		}
 	case "zoom":
@@ -279,7 +312,7 @@ func handleTabMessage(tab *Tab, raw string) {
 			app.tabs.ZoomReset()
 		}
 	case "url":
-		if tab.kind == kindWeb {
+		if tab.kind == kindWeb && isHTTPURL(msg.Data) {
 			tab.url = msg.Data
 			if tab == app.tabs.Active() {
 				refreshAddress(false)

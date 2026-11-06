@@ -65,9 +65,35 @@ func findProfileID(name string) string {
 
 func profileExists(name string) bool { return findProfileID(name) != "" }
 
+func dataDirConflict(name string) bool {
+	dir := profileDataDir(name)
+	for _, id := range allProfiles() {
+		if strings.EqualFold(profileDataDir(id), dir) {
+			return true
+		}
+	}
+	return false
+}
+
+// 追加してよい名前か調べ、だめなら翻訳キーを返す(OKなら空文字)
+func validateNewProfile(name string) string {
+	name = strings.TrimSpace(name)
+	switch {
+	case name == "":
+		return "toast_bad_name"
+	case len([]rune(name)) > maxProfileNameLen:
+		return "toast_toolong"
+	case strings.EqualFold(name, "Default") || profileExists(name) || dataDirConflict(name):
+		return "toast_exists"
+	case len(cfg.Profiles) >= maxProfiles:
+		return "toast_limit"
+	}
+	return ""
+}
+
 func addProfile(name string) bool {
 	name = strings.TrimSpace(name)
-	if name == "" || profileExists(name) {
+	if validateNewProfile(name) != "" {
 		return false
 	}
 	cfg.Profiles = append(cfg.Profiles, name)
@@ -132,7 +158,10 @@ func profilePaletteHex() []string {
 	return out
 }
 
-const maxProfileNameLen = 30
+const (
+	maxProfileNameLen = 30
+	maxProfiles       = 50
+)
 
 func renameProfile(id, newName string) string {
 	id = findProfileID(id)

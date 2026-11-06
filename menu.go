@@ -26,6 +26,7 @@ const (
 	idZoomReset         = 3
 	idSettings          = 4
 	idStartPage         = 5
+	idTranslate         = 6
 	idProfileAdd        = 15
 	idProfileNewBase    = 300
 	idProfileSwitchBase = 400
@@ -66,6 +67,9 @@ func showContextMenu(hwnd win.HWND, x, y int32) {
 		}
 		appendMenu(menu, win.MF_POPUP, uintptr(switchMenu), T("menu_tab_profile", profileMenuLabel(curID)))
 	}
+	if t := app.tabs.Active(); t.kind == kindWeb && t.selection != "" {
+		appendMenu(menu, win.MF_STRING, idTranslate, T("menu_translate"))
+	}
 	appendMenu(menu, win.MF_SEPARATOR, 0, "")
 
 	appendMenu(menu, win.MF_STRING, idSettings, T("menu_settings"))
@@ -92,11 +96,16 @@ func showContextMenu(hwnd win.HWND, x, y int32) {
 	case cmd == idProfileAdd:
 		if name, ok := showInputBox(hwnd, T("ib_title"), T("ib_prompt"), ""); ok {
 			name = strings.TrimSpace(name)
-			if name != "" && !strings.EqualFold(name, "Default") {
-				addProfile(name)
-				app.tabs.AddTab(newTabURL(), name)
-				app.layout()
+			if name == "" {
+				break
 			}
+			if key := validateNewProfile(name); key != "" {
+				win.MessageBox(hwnd, mustUTF16(T(key, name)), mustUTF16("xbrowser"), win.MB_ICONINFORMATION)
+				break
+			}
+			addProfile(name)
+			app.tabs.AddTab(newTabURL(), name)
+			app.layout()
 		}
 	case cmd >= idProfileNewBase && cmd < idProfileNewBase+100:
 		if i := int(cmd - idProfileNewBase); i < len(profiles) {
@@ -116,6 +125,8 @@ func showContextMenu(hwnd win.HWND, x, y int32) {
 			app.tabs.SwitchTabProfile(tabIdx, p)
 			app.layout()
 		}
+	case cmd == idTranslate:
+		translateText(app.tabs.Active().selection)
 	case cmd == idZoomReset:
 		app.tabs.ZoomReset()
 	case cmd == idSettings:

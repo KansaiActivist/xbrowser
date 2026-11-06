@@ -43,6 +43,7 @@ var goStrings = map[string][4]string{
 	"menu_close_tab":   {"このタブを閉じる", "Close this tab", "关闭此标签页", "이 탭 닫기"},
 	"menu_tab_profile": {"このタブのプロファイル(現在: %s)", "Profile for this tab (current: %s)", "此标签页的配置文件(当前:%s)", "이 탭의 프로필(현재: %s)"},
 	"menu_settings":    {"設定", "Settings", "设置", "설정"},
+	"menu_translate":   {"選択中のテキストを翻訳", "Translate selected text", "翻译所选文本", "선택한 텍스트 번역"},
 	"menu_start":       {"スタートページを開く", "Open start page", "打开起始页", "시작 페이지 열기"},
 	"menu_zoom_reset":  {"拡大率を100%に戻す", "Reset zoom to 100%", "将缩放恢复为 100%", "확대율을 100%로 되돌리기"},
 
@@ -65,6 +66,7 @@ var goStrings = map[string][4]string{
 	"toast_toolong":  {"プロファイル名は30文字以内にしてください", "Profile names must be 30 characters or fewer", "配置文件名称不能超过 30 个字符", "프로필 이름은 30자 이내여야 합니다"},
 	"toast_added":    {"プロファイル「%s」を追加しました", "Added profile \"%s\"", "已添加配置文件“%s”", "프로필 \"%s\"을(를) 추가했습니다"},
 	"toast_renamed":  {"プロファイル名を「%s」に変更しました", "Renamed profile to \"%s\"", "已将配置文件重命名为“%s”", "프로필 이름을 \"%s\"(으)로 변경했습니다"},
+	"toast_limit":    {"プロファイルは50個までです", "You can have up to 50 profiles", "配置文件最多 50 个", "프로필은 최대 50개까지입니다"},
 	"toast_bad_name": {"プロファイル名を入力してください", "Please enter a profile name", "请输入配置文件名称", "프로필 이름을 입력해 주세요"},
 	"toast_removed":  {"プロファイル「%s」を削除しました", "Removed profile \"%s\"", "已删除配置文件“%s”", "프로필 \"%s\"을(를) 삭제했습니다"},
 
