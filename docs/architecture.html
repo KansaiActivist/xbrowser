@@ -28,7 +28,8 @@
 <tr><td><code>i18n.go</code></td><td>4 言語の文字列テーブルと言語判定</td></tr>
 <tr><td><code>config.go</code></td><td><code>config.json</code> の読み書き、テーマの解決</td></tr>
 <tr><td><code>inject.go</code></td><td>各タブに注入する JavaScript</td></tr>
-<tr><td><code>external.go</code></td><td>既定のブラウザーで URL を開く</td></tr>
+<tr><td><code>translate.go</code></td><td>翻訳 URL の組み立て (最大 1500 文字、翻訳先は表示言語)</td></tr>
+<tr><td><code>external.go</code></td><td>既定のブラウザーで URL を開く (<code>http</code> / <code>https</code> のみ許可、制御文字・長すぎる URL は拒否、連続オープンを抑制)</td></tr>
 <tr><td><code>icon.go</code></td><td>exe に埋め込まれたアイコンの読み込み</td></tr>
 <tr><td><code>menu.go</code> / <code>inputbox.go</code> / <code>zoom.go</code></td><td>右クリックメニュー、入力ダイアログ、拡大縮小</td></tr>
 <tr><td><code>debuglog.go</code></td><td><code>debug.log</code> への簡易ログ</td></tr>
@@ -52,7 +53,9 @@
 <h2>注入 JavaScript (<code>inject.go</code>)</h2>
 <table>
 <tr><th>メッセージ</th><th>内容</th></tr>
-<tr><td><code>open_external</code></td><td>X 以外のリンクのクリック / <code>window.open</code> を捕捉して既定のブラウザーへ</td></tr>
+<tr><td><code>open_external</code></td><td>X 以外のリンクのクリック (中クリック・Ctrl + クリック含む) / <code>window.open</code> を捕捉して既定のブラウザーへ</td></tr>
+<tr><td><code>translate</code></td><td>右クリックメニューの「翻訳」で選ばれたテキスト。Go 側で URL を組み立てて既定のブラウザーで開く</td></tr>
+<tr><td><code>selection</code></td><td>現在の選択テキスト (変化時、最大 2000 文字)。タブバーのメニューの「選択中のテキストを翻訳」に使用</td></tr>
 <tr><td><code>title</code> / <code>url</code></td><td>タブ名とアドレスバーの更新 (変化時 + 2 秒間隔、<code>pushState</code> / <code>replaceState</code> もフック)</td></tr>
 <tr><td><code>zoom</code></td><td>Ctrl + ホイールの拡大縮小</td></tr>
 <tr><td><code>badge</code></td><td>通知・DM 件数。メニューの <code>aria-live</code> バッジの数字を合計し、無ければタイトルの <code>(N)</code> を使用 (3 秒間隔)</td></tr>
@@ -60,10 +63,16 @@
 </table>
 <h2>テーマ</h2>
 <p>プリセットは <code>dark</code> / <code>light</code> / <code>system</code>。<code>system</code> はレジストリの <code>AppsUseLightTheme</code> を読み、<code>WM_SETTINGCHANGE</code> で Windows 側の変更に追従します。</p>
+<h2>セキュリティ上の作り</h2>
+<ul>
+<li>WebView2 の <code>chrome.webview</code> は第三者の iframe からも呼べるため、ページからのメッセージは種類ごとにタブの種類・大きさ・値を検証します。設定を変える操作は設定タブからしか受け付けません。</li>
+<li>タブの URL として保存するのは <code>http</code> / <code>https</code> だけです。</li>
+<li>設定ファイルは一時ファイルに書いてから置き換えるため、書き込み中に終了しても壊れません。</li>
+<li><code>debug.log</code> は 1MB を超えると次回起動時に作り直し、ページから届いたメッセージの中身は記録しません。</li>
+</ul>
 <h2>既知の制限</h2>
 <ul>
 <li>外部リンクの判定はクリックと <code>window.open</code> ベースです。<code>location.href</code> によるスクリプト遷移やサーバーリダイレクトは検知できない場合があります。</li>
-<li>中クリック / Ctrl + クリックで新しいウィンドウを開く動作は、WebView2 の <code>NewWindowRequested</code> 対応が必要で、未対応です。</li>
 <li>レイアウトは固定ピクセルで、高 DPI への対応は簡易的です (<code>window.go</code> の定数で調整可能)。</li>
 <li>通知バッジと X 側のテーマ連動は、X の DOM / クッキー仕様に依存します。</li>
 </ul>

@@ -40,6 +40,33 @@ pg.innerHTML=(i>0?'<a href="'+flat[i-1][0]+'">← '+flat[i-1][1]+'</a>':'<span><
 }
 markActive();buildPager();
 
+var bar=document.createElement("div");
+bar.id="loadbar";
+document.body.appendChild(bar);
+var barTimer=0,barVal=0;
+function barStart(){
+clearInterval(barTimer);
+bar.className="";
+bar.style.transform="scaleX(0)";
+void bar.offsetWidth;
+barVal=0.15;
+bar.className="run";
+bar.style.transform="scaleX("+barVal+")";
+barTimer=setInterval(function(){
+barVal+=(0.9-barVal)*0.18;
+bar.style.transform="scaleX("+barVal+")";
+},250);
+}
+function barDone(){
+clearInterval(barTimer);
+bar.style.transform="";
+bar.className="done";
+}
+if(document.readyState!=="complete"){
+barStart();
+window.addEventListener("load",barDone);
+}
+
 var cache={};
 cache[cur]={title:document.title,body:article.innerHTML};
 var pending={};
@@ -63,6 +90,7 @@ return pending[file];
 var token=0;
 function show(file,hash,push){
 var my=++token;
+barStart();
 load(file).then(function(c){
 if(my!==token)return;
 article.classList.add("swap");
@@ -77,8 +105,9 @@ if(push)history.pushState({f:file},"",file+(hash||""));
 var el=hash&&document.getElementById(decodeURIComponent(hash.slice(1)));
 if(el)el.scrollIntoView();else window.scrollTo(0,0);
 article.classList.remove("swap");
+barDone();
 },120);
-}).catch(function(){location.href=file+(hash||"")});
+}).catch(function(){barDone();location.href=file+(hash||"")});
 }
 
 function isInternal(a){

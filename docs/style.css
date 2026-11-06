@@ -49,3 +49,18 @@ main{padding:22px 16px 60px}
 article{transition:opacity .12s ease,transform .12s ease}
 article.swap{opacity:0;transform:translateY(4px)}
 @media(prefers-reduced-motion:reduce){article{transition:none}}
+
+nav{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+nav::-webkit-scrollbar{width:8px}
+nav::-webkit-scrollbar-track{background:transparent}
+nav::-webkit-scrollbar-thumb{background:transparent;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+nav:hover::-webkit-scrollbar-thumb{background:var(--line);background-clip:content-box}
+nav::-webkit-scrollbar-thumb:hover{background:var(--sub);background-clip:content-box}
+pre,table{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+pre::-webkit-scrollbar,table::-webkit-scrollbar{height:8px}
+pre::-webkit-scrollbar-thumb,table::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+pre::-webkit-scrollbar-track,table::-webkit-scrollbar-track{background:transparent}
+#loadbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:20;pointer-events:none;background:var(--accent);transform-origin:left;transform:scaleX(0);opacity:0;box-shadow:0 0 8px var(--accent)}
+#loadbar.run{opacity:1;transition:transform .4s ease-out}
+#loadbar.done{opacity:0;transform:scaleX(1);transition:transform .2s ease-out,opacity .35s ease .2s}
+@media(prefers-reduced-motion:reduce){#loadbar{transition:none!important}}
