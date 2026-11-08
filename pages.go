@@ -32,12 +32,14 @@ const (
 	kindStart    = "start"
 	kindSettings = "settings"
 
-	wmAppAction     = win.WM_APP + 1
-	actOpenSettings = 1
-	actOpenProfile  = 2
-	actPickImage    = 3
-	actFocusAddress = 4
-	actToggleTheme  = 5
+	wmAppAction      = win.WM_APP + 1
+	actOpenSettings  = 1
+	actOpenProfile   = 2
+	actPickImage     = 3
+	actFocusAddress  = 4
+	actToggleTheme   = 5
+	actNewTab        = 6
+	actTranslateDone = 7
 )
 
 var pendingProfile string

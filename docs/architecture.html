@@ -28,7 +28,7 @@
 <tr><td><code>i18n.go</code></td><td>4 言語の文字列テーブルと言語判定</td></tr>
 <tr><td><code>config.go</code></td><td><code>config.json</code> の読み書き、テーマの解決</td></tr>
 <tr><td><code>inject.go</code></td><td>各タブに注入する JavaScript</td></tr>
-<tr><td><code>translate.go</code></td><td>翻訳 URL の組み立て (最大 1500 文字、翻訳先は表示言語)</td></tr>
+<tr><td><code>translate.go</code></td><td>翻訳 (Google の翻訳サーバーへの問い合わせ、結果のページへの受け渡し。最大 1500 文字、翻訳先は表示言語)</td></tr>
 <tr><td><code>external.go</code></td><td>既定のブラウザーで URL を開く (<code>http</code> / <code>https</code> のみ許可、制御文字・長すぎる URL は拒否、連続オープンを抑制)</td></tr>
 <tr><td><code>icon.go</code></td><td>exe に埋め込まれたアイコンの読み込み</td></tr>
 <tr><td><code>menu.go</code> / <code>inputbox.go</code> / <code>zoom.go</code></td><td>右クリックメニュー、入力ダイアログ、拡大縮小</td></tr>
@@ -54,7 +54,7 @@
 <table>
 <tr><th>メッセージ</th><th>内容</th></tr>
 <tr><td><code>open_external</code></td><td>X 以外のリンクのクリック (中クリック・Ctrl + クリック含む) / <code>window.open</code> を捕捉して既定のブラウザーへ</td></tr>
-<tr><td><code>translate</code></td><td>右クリックメニューの「翻訳」で選ばれたテキスト。Go 側で URL を組み立てて既定のブラウザーで開く</td></tr>
+<tr><td><code>translate</code> / <code>translate_open</code></td><td>右クリックメニューの「翻訳」で選ばれたテキスト (<code>{id, text}</code>)。Go 側が非同期に翻訳し、<code>window.__xb_tr</code> へ結果を返してポップアップに表示。<code>translate_open</code> は「Google翻訳で開く」</td></tr>
 <tr><td><code>selection</code></td><td>現在の選択テキスト (変化時、最大 2000 文字)。タブバーのメニューの「選択中のテキストを翻訳」に使用</td></tr>
 <tr><td><code>title</code> / <code>url</code></td><td>タブ名とアドレスバーの更新 (変化時 + 2 秒間隔、<code>pushState</code> / <code>replaceState</code> もフック)</td></tr>
 <tr><td><code>zoom</code></td><td>Ctrl + ホイールの拡大縮小</td></tr>
@@ -63,6 +63,13 @@
 </table>
 <h2>テーマ</h2>
 <p>プリセットは <code>dark</code> / <code>light</code> / <code>system</code>。<code>system</code> はレジストリの <code>AppsUseLightTheme</code> を読み、<code>WM_SETTINGCHANGE</code> で Windows 側の変更に追従します。</p>
+<h2>翻訳の流れ</h2>
+<ol>
+<li>ページ内の JS が選択テキストを <code>translate</code> で送り、「翻訳中…」のポップアップ (Shadow DOM) を出します。</li>
+<li>Go が goroutine で <code>translate.googleapis.com</code> に問い合わせます。COM は UI スレッドからしか触れないため、結果は <code>WM_APP</code> メッセージで UI スレッドに戻してから <code>Eval</code> でページへ渡します。</li>
+<li>ページ側は <code>id</code> が現在のポップアップと一致する結果だけを表示します (古い結果は無視)。</li>
+</ol>
+<p>通信はアプリ本体だけが行うため、X のページに外部への通信を許可する必要はありません。</p>
 <h2>セキュリティ上の作り</h2>
 <ul>
 <li>WebView2 の <code>chrome.webview</code> は第三者の iframe からも呼べるため、ページからのメッセージは種類ごとにタブの種類・大きさ・値を検証します。設定を変える操作は設定タブからしか受け付けません。</li>

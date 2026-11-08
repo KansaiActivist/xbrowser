@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/jchv/go-webview2/pkg/edge"
@@ -39,6 +40,8 @@ type Tab struct {
 	badge      int
 	kind       string
 	selection  string
+
+	lastTranslate time.Time
 }
 
 func (t *Tab) Eval(js string) {
@@ -107,6 +110,9 @@ func (m *TabManager) AddTab(url string, profile string) {
 			return true
 		case 0x4C:
 			win.PostMessage(app.hwnd, wmAppAction, actFocusAddress, 0)
+			return true
+		case 0x4E:
+			win.PostMessage(app.hwnd, wmAppAction, actNewTab, 0)
 			return true
 		case 0x44:
 			if win.GetKeyState(win.VK_SHIFT) < 0 {
@@ -290,6 +296,17 @@ func handleTabMessage(tab *Tab, raw string) {
 			openExternal(msg.Data)
 		}
 	case "translate":
+		if tab.kind == kindWeb {
+			var req struct {
+				ID   int    `json:"id"`
+				Text string `json:"text"`
+			}
+			if json.Unmarshal([]byte(msg.Data), &req) == nil && time.Since(tab.lastTranslate) > 300*time.Millisecond {
+				tab.lastTranslate = time.Now()
+				startTranslate(tab, req.ID, req.Text)
+			}
+		}
+	case "translate_open":
 		if tab.kind == kindWeb {
 			translateText(msg.Data)
 		}

@@ -367,6 +367,10 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 			focusAddress()
 		case actToggleTheme:
 			toggleTheme()
+		case actNewTab:
+			app.tabs.AddTab(newTabURL(), app.tabs.Active().profile)
+		case actTranslateDone:
+			deliverTranslations()
 		}
 		app.layout()
 		return 0

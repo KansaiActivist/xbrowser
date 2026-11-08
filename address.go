@@ -45,6 +45,11 @@ func addrProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 			refreshAddress(true)
 			focusActiveTab()
 			return 0
+		case 'N':
+			if win.GetKeyState(win.VK_CONTROL) < 0 {
+				win.PostMessage(app.hwnd, wmAppAction, actNewTab, 0)
+				return 0
+			}
 		case 'A':
 			if win.GetKeyState(win.VK_CONTROL) < 0 {
 				win.SendMessage(hwnd, win.EM_SETSEL, 0, ^uintptr(0))
@@ -52,7 +57,7 @@ func addrProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 			}
 		}
 	case win.WM_CHAR:
-		if wParam == 13 || wParam == 27 || wParam == 1 {
+		if wParam == 13 || wParam == 27 || wParam == 1 || wParam == 14 {
 			return 0
 		}
 	case win.WM_LBUTTONDOWN:

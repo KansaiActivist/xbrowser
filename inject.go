@@ -70,10 +70,10 @@ const injectedJSTemplate = `
   };
 
   var LABELS = {
-    ja: { copy: 'コピー', translate: '翻訳' },
-    en: { copy: 'Copy', translate: 'Translate' },
-    zh: { copy: '复制', translate: '翻译' },
-    ko: { copy: '복사', translate: '번역' }
+    ja: { copy: 'コピー', translate: '翻訳', busy: '翻訳中…', fail: '翻訳できませんでした', google: 'Google翻訳で開く', close: '閉じる' },
+    en: { copy: 'Copy', translate: 'Translate', busy: 'Translating…', fail: 'Could not translate', google: 'Open in Google Translate', close: 'Close' },
+    zh: { copy: '复制', translate: '翻译', busy: '翻译中…', fail: '无法翻译', google: '在 Google 翻译中打开', close: '关闭' },
+    ko: { copy: '복사', translate: '번역', busy: '번역 중…', fail: '번역하지 못했습니다', google: 'Google 번역에서 열기', close: '닫기' }
   };
   var MAX_TEXT = 2000;
   var menuHost = null;
@@ -119,7 +119,7 @@ const injectedJSTemplate = `
     var box = document.createElement('div');
     box.className = 'm';
     [[L.copy, function () { copyText(text); }],
-     [L.translate, function () { post('translate', text); }]].forEach(function (it) {
+     [L.translate, function () { startTranslate(text, x, y); }]].forEach(function (it) {
       var d = document.createElement('div');
       d.className = 'i';
       d.textContent = it[0];
@@ -134,6 +134,104 @@ const injectedJSTemplate = `
     box.style.left = Math.max(0, Math.min(x, window.innerWidth - r.width - 4)) + 'px';
     box.style.top = Math.max(0, Math.min(y, window.innerHeight - r.height - 4)) + 'px';
   }
+  var popHost = null;
+  var popBox = null;
+  var reqId = 0;
+
+  function closePopup() {
+    reqId++;
+    if (popHost) { popHost.remove(); popHost = null; popBox = null; }
+  }
+  function popCss(dark) {
+    return '.p{position:fixed;width:min(420px,calc(100vw - 24px));box-sizing:border-box;padding:12px 14px;border-radius:14px;' +
+      'font:14px/1.6 "Segoe UI","Yu Gothic UI","Microsoft YaHei UI","Malgun Gothic",system-ui,sans-serif;' +
+      'box-shadow:0 6px 24px rgba(0,0,0,.4);border:1px solid ' + (dark ? '#2F3336' : '#CFD9DE') + ';' +
+      'background:' + (dark ? '#000' : '#fff') + ';color:' + (dark ? '#E7E9EA' : '#0F1419') + '}' +
+      '.h{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:' + (dark ? '#8B98A5' : '#536471') + ';font-size:12px}' +
+      '.h span{flex:1}.x{cursor:pointer;padding:0 6px;font-size:16px;line-height:1}' +
+      '.b{max-height:40vh;overflow:auto;white-space:pre-wrap;word-break:break-word;user-select:text}' +
+      '.f{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}' +
+      '.k{cursor:pointer;padding:5px 12px;border-radius:999px;font-size:13px;user-select:none;border:1px solid ' + (dark ? '#536471' : '#CFD9DE') + '}' +
+      '.k:hover{background:' + (dark ? '#16181C' : '#EFF3F4') + '}';
+  }
+  function popButton(label, fn) {
+    var d = document.createElement('div');
+    d.className = 'k';
+    d.textContent = label;
+    d.addEventListener('click', fn);
+    return d;
+  }
+  function placePopup(x, y) {
+    var r = popBox.getBoundingClientRect();
+    popBox.style.left = Math.max(8, Math.min(x, window.innerWidth - r.width - 8)) + 'px';
+    popBox.style.top = Math.max(8, Math.min(y, window.innerHeight - r.height - 8)) + 'px';
+  }
+  var popX = 0, popY = 0, popText = '';
+  function renderPopup(head, body, buttons) {
+    if (!popBox) return;
+    popBox.textContent = '';
+    var h = document.createElement('div');
+    h.className = 'h';
+    var hs = document.createElement('span');
+    hs.textContent = head;
+    var hx = document.createElement('div');
+    hx.className = 'x';
+    hx.textContent = '×';
+    hx.addEventListener('click', closePopup);
+    h.appendChild(hs);
+    h.appendChild(hx);
+    var b = document.createElement('div');
+    b.className = 'b';
+    b.textContent = body;
+    popBox.appendChild(h);
+    popBox.appendChild(b);
+    if (buttons.length) {
+      var f = document.createElement('div');
+      f.className = 'f';
+      buttons.forEach(function (k) { f.appendChild(k); });
+      popBox.appendChild(f);
+    }
+    placePopup(popX, popY);
+  }
+  function startTranslate(text, x, y) {
+    closeMenu();
+    closePopup();
+    var id = ++reqId;
+    var L = LABELS[window.__xb_lang || '__XB_LANG__'] || LABELS.en;
+    popText = text;
+    popX = x;
+    popY = y;
+    popHost = document.createElement('div');
+    popHost.style.cssText = 'all:initial;position:fixed;left:0;top:0;z-index:2147483647';
+    var root = popHost.attachShadow({ mode: 'closed' });
+    var style = document.createElement('style');
+    style.textContent = popCss(isDarkPage());
+    popBox = document.createElement('div');
+    popBox.className = 'p';
+    popBox.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+    root.appendChild(style);
+    root.appendChild(popBox);
+    document.documentElement.appendChild(popHost);
+    renderPopup(L.translate, L.busy, []);
+    post('translate', JSON.stringify({ id: id, text: text }));
+  }
+  window.__xb_tr = function (r) {
+    if (!popBox || !r || r.id !== reqId) return;
+    var L = LABELS[window.__xb_lang || '__XB_LANG__'] || LABELS.en;
+    var openG = popButton(L.google, function () { post('translate_open', popText); closePopup(); });
+    if (r.ok) {
+      var out = String(r.text || '');
+      var head = L.translate + (r.src ? '  ' + String(r.src).toUpperCase() + ' → ' + String(r.tl).toUpperCase() : '');
+      renderPopup(head, out, [popButton(L.copy, function () { copyText(out); }), openG]);
+    } else {
+      renderPopup(L.translate, L.fail, [openG]);
+    }
+  };
+  window.__xb_translateSel = function () {
+    var s = window.getSelection();
+    var t = s ? s.toString().trim().slice(0, MAX_TEXT) : '';
+    if (t) startTranslate(t, window.innerWidth / 2 - 210, 80);
+  };
   function editable(el) {
     return !!(el && el.closest && el.closest('input,textarea,[contenteditable=""],[contenteditable="true"]'));
   }
@@ -151,11 +249,12 @@ const injectedJSTemplate = `
   }, true);
   document.addEventListener('mousedown', function (e) {
     if (menuHost && e.target !== menuHost) closeMenu();
+    if (popHost && e.target !== popHost) closePopup();
   }, true);
   window.addEventListener('blur', closeMenu);
   window.addEventListener('resize', closeMenu);
   window.addEventListener('scroll', closeMenu, true);
-  window.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); }, true);
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeMenu(); closePopup(); } }, true);
 
   var lastSel = '';
   var selTimer = 0;

@@ -126,7 +126,7 @@ func showContextMenu(hwnd win.HWND, x, y int32) {
 			app.layout()
 		}
 	case cmd == idTranslate:
-		translateText(app.tabs.Active().selection)
+		app.tabs.Active().translateSelection()
 	case cmd == idZoomReset:
 		app.tabs.ZoomReset()
 	case cmd == idSettings:
