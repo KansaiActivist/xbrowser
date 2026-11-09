@@ -16,7 +16,7 @@ var (
 	procCreateMutexW = kernel32b.NewProc("CreateMutexW")
 )
 
-func ensureSingleInstance() bool {
+func ensureSingleInstance(forwardURL string) bool {
 	name, _ := syscall.UTF16PtrFromString("Local\\XBrowserSingleInstanceMutex")
 	h, _, callErr := procCreateMutexW.Call(0, 0, uintptr(unsafe.Pointer(name)))
 	if h == 0 {
@@ -27,8 +27,10 @@ func ensureSingleInstance() bool {
 		classPtr, _ := syscall.UTF16PtrFromString(className)
 		existing := win.FindWindow(classPtr, nil)
 		if existing != 0 {
-			win.ShowWindow(existing, win.SW_RESTORE)
-			win.SetForegroundWindow(existing)
+			if forwardURL != "" {
+				sendURLToRunning(existing, forwardURL)
+			}
+			bringToFront(existing)
 		}
 		return false
 	}

@@ -39,6 +39,7 @@ const (
 	actFocusAddress  = 4
 	actToggleTheme   = 5
 	actNewTab        = 6
+	actOpenTabs      = 8
 	actTranslateDone = 7
 )
 
@@ -119,6 +120,8 @@ func settingsState() map[string]any {
 		"preset":        presetName(),
 		"presetMode":    themeMode(),
 		"themeSync":     cfg.ThemeSync,
+		"barScale":      cfg.BarScale,
+		"barLayout":     cfg.BarLayout,
 		"radius":        palette.radius,
 		"colors":        colors,
 		"profiles":      profileStates(),
@@ -278,6 +281,22 @@ func handleSettingsSet(tab *Tab, data string) {
 			if str == "on" {
 				applyWebThemeAll()
 			}
+		}
+	case "barScale":
+		var n int
+		if json.Unmarshal(p.Value, &n) == nil {
+			cfg.BarScale = clampBarScale(n)
+			if p.Save {
+				saveConfig()
+			}
+			refreshBarLayout()
+		}
+		return
+	case "barLayout":
+		if str == layoutTabsTop || str == layoutToolbarTop {
+			cfg.BarLayout = str
+			saveConfig()
+			refreshBarLayout()
 		}
 	case "tabRadius":
 		var n int
