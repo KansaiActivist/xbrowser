@@ -245,6 +245,18 @@ input[type=range] { flex:1; accent-color:var(--accent); }
     p.appendChild(h('div', { class: 'row' }, [text(t('radius_label'), null), range, val]));
     p.appendChild(divider());
 
+    p.appendChild(title(t('bar_title')));
+    var bs = state.barScale || 100;
+    var bval = h('span', { class: 'val', text: bs + ' %' });
+    var brange = h('input', { type: 'range', min: '80', max: '140', step: '10', value: String(bs) });
+    brange.addEventListener('input', function () { bval.textContent = brange.value + ' %'; set('barScale', +brange.value, false); });
+    brange.addEventListener('change', function () { set('barScale', +brange.value, true); });
+    p.appendChild(h('div', { class: 'row' }, [text(t('bar_size'), null), brange, bval]));
+    var bl = state.barLayout || 'tabs-top';
+    p.appendChild(radioRow(t('bar_tabs_top'), t('bar_tabs_top_hint'), bl !== 'toolbar-top', function () { set('barLayout', 'tabs-top'); }));
+    p.appendChild(radioRow(t('bar_toolbar_top'), t('bar_toolbar_top_hint'), bl === 'toolbar-top', function () { set('barLayout', 'toolbar-top'); }));
+    p.appendChild(divider());
+
     p.appendChild(title(t('colors_title')));
     p.appendChild(lead(t('colors_lead')));
     COLOR_KEYS.forEach(function (key) {

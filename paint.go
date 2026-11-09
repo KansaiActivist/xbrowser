@@ -85,7 +85,7 @@ func paintChrome(hwnd win.HWND) {
 
 	var client win.RECT
 	win.GetClientRect(hwnd, &client)
-	w, h := client.Right-client.Left, int32(chromeH)
+	w, h := client.Right-client.Left, chromeH
 
 	mem := win.CreateCompatibleDC(hdc)
 	bmp := win.CreateCompatibleBitmap(hdc, w, h)
@@ -94,12 +94,12 @@ func paintChrome(hwnd win.HWND) {
 
 	p := &painter{
 		hdc:       mem,
-		fText:     makeFont("Segoe UI", -15, win.FW_NORMAL),
-		fTextBold: makeFont("Segoe UI", -15, 600),
-		fIcon:     makeFont(iconFace, -14, win.FW_NORMAL),
-		fIconS:    makeFont(iconFace, -10, win.FW_NORMAL),
-		fZoom:     makeFont("Segoe UI", -13, 600),
-		fBadge:    makeFont("Segoe UI", -11, 700),
+		fText:     makeFont("Segoe UI", -sc(15), win.FW_NORMAL),
+		fTextBold: makeFont("Segoe UI", -sc(15), 600),
+		fIcon:     makeFont(iconFace, -sc(14), win.FW_NORMAL),
+		fIconS:    makeFont(iconFace, -sc(10), win.FW_NORMAL),
+		fZoom:     makeFont("Segoe UI", -sc(13), 600),
+		fBadge:    makeFont("Segoe UI", -sc(11), 700),
 	}
 
 	p.fill(win.RECT{Left: 0, Top: 0, Right: w, Bottom: h}, palette.bar)
@@ -135,7 +135,7 @@ func (p *painter) drawNav() {
 	}{{zoneBack, "\uE72B"}, {zoneForward, "\uE72A"}, {zoneReload, "\uE72C"}}
 	for _, it := range items {
 		slot := app.navButtonRect(it.z)
-		pill := inset(slot, 3, 8)
+		pill := inset(slot, sc(3), sc(8))
 		p.hoverPill(it.z, pill)
 		p.icon(slot, it.g, palette.icon, false)
 	}
@@ -144,12 +144,12 @@ func (p *painter) drawNav() {
 func (p *painter) drawAddress() {
 	r := app.addressRect()
 	p.round(r, (r.Bottom-r.Top)/2, addrPillColor())
-	p.icon(win.RECT{Left: r.Left + 6, Top: r.Top, Right: r.Left + 36, Bottom: r.Bottom}, "\uE774", palette.tabTextInactive, true)
+	p.icon(win.RECT{Left: r.Left + sc(6), Top: r.Top, Right: r.Left + sc(36), Bottom: r.Bottom}, "\uE774", palette.tabTextInactive, true)
 }
 
 func (p *painter) drawTheme() {
 	slot := app.themeRect()
-	p.hoverPill(zoneTheme, inset(slot, 3, 8))
+	p.hoverPill(zoneTheme, inset(slot, sc(3), sc(8)))
 	glyph := "\uE708"
 	if effectivePreset() == "dark" {
 		glyph = "\uE706"
@@ -171,17 +171,17 @@ func badgeText(n int) string {
 
 func badgeWidth(n int) int32 {
 	if n > 99 {
-		return 30
+		return sc(30)
 	}
 	if n > 9 {
-		return 24
+		return sc(24)
 	}
-	return 18
+	return sc(18)
 }
 
 func (p *painter) drawNewTab() {
 	slot := app.newTabBtnRect()
-	p.hoverPill(zoneNewTab, inset(slot, 3, 8))
+	p.hoverPill(zoneNewTab, inset(slot, sc(3), sc(8)))
 	p.icon(slot, "\uE710", palette.icon, false)
 }
 
@@ -207,18 +207,19 @@ func (p *painter) drawTabs() {
 			title = "X"
 		}
 		cr := tabCloseRect(slot)
-		textLeft := vr.Left + int32(14)
+		textLeft := vr.Left + sc(14)
 		if dot, ok := profileColor(tab.profile); ok {
-			const d = 8
+			d := sc(8)
 			dotTop := vr.Top + (vr.Bottom-vr.Top-d)/2
-			p.round(win.RECT{Left: vr.Left + 10, Top: dotTop, Right: vr.Left + 10 + d, Bottom: dotTop + d}, d/2, dot)
-			textLeft = vr.Left + 26
+			p.round(win.RECT{Left: vr.Left + sc(10), Top: dotTop, Right: vr.Left + sc(10) + d, Bottom: dotTop + d}, d/2, dot)
+			textLeft = vr.Left + sc(26)
 		}
 		textRight := cr.Left - 4
 		if tab.badge > 0 {
 			bw := badgeWidth(tab.badge)
-			bt := vr.Top + (vr.Bottom-vr.Top-18)/2
-			p.badge(win.RECT{Left: cr.Left - 4 - bw, Top: bt, Right: cr.Left - 4, Bottom: bt + 18}, tab.badge)
+			bh := sc(18)
+			bt := vr.Top + (vr.Bottom-vr.Top-bh)/2
+			p.badge(win.RECT{Left: cr.Left - 4 - bw, Top: bt, Right: cr.Left - 4, Bottom: bt + bh}, tab.badge)
 			textRight = cr.Left - 4 - bw - 4
 		}
 		tr := win.RECT{Left: textLeft, Top: vr.Top, Right: textRight, Bottom: vr.Bottom}
@@ -250,7 +251,7 @@ func (p *painter) drawZoom() {
 
 func (p *painter) drawSettings() {
 	slot := app.settingsRect()
-	pill := inset(slot, 3, 8)
+	pill := inset(slot, sc(3), sc(8))
 	if t := app.tabs.Active(); t.kind == kindSettings {
 		p.round(pill, palette.radius, palette.tabActive)
 	} else {

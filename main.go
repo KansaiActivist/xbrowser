@@ -32,7 +32,8 @@ func main() {
 	// Win32のメッセージループとCOM(WebView2)は同じOSスレッドで動かす必要がある
 	runtime.LockOSThread()
 
-	if !ensureSingleInstance() {
+	startupURL = urlFromArgs(os.Args[1:])
+	if !ensureSingleInstance(startupURL) {
 
 		return
 	}

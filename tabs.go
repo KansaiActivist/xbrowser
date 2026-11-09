@@ -42,6 +42,7 @@ type Tab struct {
 	selection  string
 
 	lastTranslate time.Time
+	lastOpenTab   time.Time
 }
 
 func (t *Tab) Eval(js string) {
@@ -294,6 +295,11 @@ func handleTabMessage(tab *Tab, raw string) {
 	case "open_external":
 		if tab.kind == kindWeb {
 			openExternal(msg.Data)
+		}
+	case "open_tab":
+		if tab.kind == kindWeb && isXURL(msg.Data) && time.Since(tab.lastOpenTab) > 300*time.Millisecond {
+			tab.lastOpenTab = time.Now()
+			queueOpenTab(msg.Data, tab.profile)
 		}
 	case "translate":
 		if tab.kind == kindWeb {

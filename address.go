@@ -29,9 +29,17 @@ func createAddressBar(parent win.HWND) {
 	hInstance := win.GetModuleHandle(nil)
 	addrEdit = win.CreateWindowEx(0, syscall.StringToUTF16Ptr("EDIT"), syscall.StringToUTF16Ptr(""),
 		win.WS_CHILD|win.WS_VISIBLE|win.ES_AUTOHSCROLL, 0, 0, 100, 22, parent, idAddress, hInstance, nil)
-	addrFont = makeFont("Segoe UI", -15, win.FW_NORMAL)
-	win.SendMessage(addrEdit, win.WM_SETFONT, uintptr(addrFont), 1)
+	updateAddrFont()
 	addrOrigProc = win.SetWindowLongPtr(addrEdit, win.GWLP_WNDPROC, syscall.NewCallback(addrProc))
+}
+
+func updateAddrFont() {
+	old := addrFont
+	addrFont = makeFont("Segoe UI", -sc(15), win.FW_NORMAL)
+	win.SendMessage(addrEdit, win.WM_SETFONT, uintptr(addrFont), 1)
+	if old != 0 {
+		win.DeleteObject(win.HGDIOBJ(old))
+	}
 }
 
 func addrProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
@@ -99,9 +107,9 @@ func layoutAddressBar() {
 		return
 	}
 	r := app.addressRect()
-	const h = 22
-	x := r.Left + 38
-	w := r.Right - r.Left - 38 - 16
+	h := sc(22)
+	x := r.Left + sc(38)
+	w := r.Right - r.Left - sc(38) - sc(16)
 	if w < 20 {
 		w = 20
 	}

@@ -38,6 +38,8 @@ type Config struct {
 	StartBg       string   `json:"startBg"`
 	StartImage    string   `json:"startImage"`
 
+	BarScale      int               `json:"barScale"`
+	BarLayout     string            `json:"barLayout"`
 	ThemeSync     string            `json:"themeSync"`
 	ProfileNames  map[string]string `json:"profileNames"`
 	ProfileColors map[string]string `json:"profileColors"`
@@ -78,12 +80,14 @@ func configPath() string { return filepath.Join(appBaseDir(), "config.json") }
 func loadConfig() {
 	_ = os.MkdirAll(appBaseDir(), 0o755)
 	cfg = Config{
-		Comment:       "色は #RRGGBB 形式。空文字は preset(dark/light/system) の色を使う。tabRadius は角の丸み(2〜24px)。notifications と themeSync は on/off。startPage は x(Xの画面)/simple(簡易スタートページ)。language は ja/en/zh/ko。startBg は white/black/image(スタートページの背景)。設定はアプリ内の「設定」タブからも変更できる。ファイルを直接編集したときはアプリを再起動する。",
+		Comment:       "色は #RRGGBB 形式。空文字は preset(dark/light/system) の色を使う。tabRadius は角の丸み(2〜24px)。notifications と themeSync は on/off。barScale は上部バーの大きさ(80〜140、%)、barLayout は tabs-top(タブが上)/toolbar-top(アドレスバーが上)。startPage は x(Xの画面)/simple(簡易スタートページ)。language は ja/en/zh/ko。startBg は white/black/image(スタートページの背景)。設定はアプリ内の「設定」タブからも変更できる。ファイルを直接編集したときはアプリを再起動する。",
 		Zoom:          1.0,
 		Theme:         Theme{Preset: "dark"},
 		Notifications: "on",
 		StartPage:     "x",
 		ThemeSync:     "on",
+		BarScale:      100,
+		BarLayout:     layoutTabsTop,
 		Language:      detectLanguage(),
 	}
 	if b, err := os.ReadFile(configPath()); err == nil {
@@ -100,6 +104,12 @@ func loadConfig() {
 				cfg.ThemeSync = "off"
 			}
 			cfg.ProfileColors = c.ProfileColors
+			if c.BarScale != 0 {
+				cfg.BarScale = clampBarScale(c.BarScale)
+			}
+			if c.BarLayout == layoutToolbarTop {
+				cfg.BarLayout = layoutToolbarTop
+			}
 			cfg.StartImage = filepath.Base(strings.TrimSpace(c.StartImage))
 			if cfg.StartImage == "." || cfg.StartImage == string(filepath.Separator) {
 				cfg.StartImage = ""
@@ -148,6 +158,7 @@ func loadConfig() {
 	}
 	saveConfig()
 	resolveTheme()
+	applyBarMetrics()
 }
 
 func saveConfig() {
