@@ -28,6 +28,8 @@
 <tr><td><code>i18n.go</code></td><td>4 言語の文字列テーブルと言語判定</td></tr>
 <tr><td><code>config.go</code></td><td><code>config.json</code> の読み書き、テーマの解決</td></tr>
 <tr><td><code>inject.go</code></td><td>各タブに注入する JavaScript</td></tr>
+<tr><td><code>metrics.go</code></td><td>上部バーの大きさ・配置 (各部のピクセル値を <code>barScale</code> から計算)</td></tr>
+<tr><td><code>cmdline.go</code></td><td>起動引数の URL、起動中のアプリへの転送 (<code>WM_COPYDATA</code>)、ページからの「新しいタブで開く」の受付</td></tr>
 <tr><td><code>translate.go</code></td><td>翻訳 (Google の翻訳サーバーへの問い合わせ、結果のページへの受け渡し。最大 1500 文字、翻訳先は表示言語)</td></tr>
 <tr><td><code>external.go</code></td><td>既定のブラウザーで URL を開く (<code>http</code> / <code>https</code> のみ許可、制御文字・長すぎる URL は拒否、連続オープンを抑制)</td></tr>
 <tr><td><code>icon.go</code></td><td>exe に埋め込まれたアイコンの読み込み</td></tr>
@@ -54,6 +56,7 @@
 <table>
 <tr><th>メッセージ</th><th>内容</th></tr>
 <tr><td><code>open_external</code></td><td>X 以外のリンクのクリック (中クリック・Ctrl + クリック含む) / <code>window.open</code> を捕捉して既定のブラウザーへ</td></tr>
+<tr><td><code>open_tab</code></td><td>X のリンクを新しいタブで開く要求 (<code>target="_blank"</code>・中クリック・Ctrl + クリック・<code>window.open</code>)。X のドメインだけ受け付け、キューに積んで UI スレッドで開く</td></tr>
 <tr><td><code>translate</code> / <code>translate_open</code></td><td>右クリックメニューの「翻訳」で選ばれたテキスト (<code>{id, text}</code>)。Go 側が非同期に翻訳し、<code>window.__xb_tr</code> へ結果を返してポップアップに表示。<code>translate_open</code> は「Google翻訳で開く」</td></tr>
 <tr><td><code>selection</code></td><td>現在の選択テキスト (変化時、最大 2000 文字)。タブバーのメニューの「選択中のテキストを翻訳」に使用</td></tr>
 <tr><td><code>title</code> / <code>url</code></td><td>タブ名とアドレスバーの更新 (変化時 + 2 秒間隔、<code>pushState</code> / <code>replaceState</code> もフック)</td></tr>
@@ -73,6 +76,8 @@
 <h2>セキュリティ上の作り</h2>
 <ul>
 <li>WebView2 の <code>chrome.webview</code> は第三者の iframe からも呼べるため、ページからのメッセージは種類ごとにタブの種類・大きさ・値を検証します。設定を変える操作は設定タブからしか受け付けません。</li>
+<li>閉じる・最小化・最大化・タブの × は、マウスを離したときに実行します。押した瞬間に実行すると、アプリが消えたあとの「離す」操作が背後のウィンドウ (エクスプローラーのタブの × など) に届いてしまうためです。</li>
+<li>起動引数・転送された URL・「新しいタブで開く」は、X のドメイン (https) だけを受け付け、数と頻度も制限します。</li>
 <li>タブの URL として保存するのは <code>http</code> / <code>https</code> だけです。</li>
 <li>設定ファイルは一時ファイルに書いてから置き換えるため、書き込み中に終了しても壊れません。</li>
 <li><code>debug.log</code> は 1MB を超えると次回起動時に作り直し、ページから届いたメッセージの中身は記録しません。</li>
