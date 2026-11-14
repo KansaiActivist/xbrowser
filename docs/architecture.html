@@ -86,7 +86,7 @@
 </ul>
 <h2>既知の制限</h2>
 <ul>
-<li>外部リンクの判定はクリックと <code>window.open</code> ベースです。<code>location.href</code> によるスクリプト遷移やサーバーリダイレクトは検知できない場合があります。</li>
+<li>外部リンクはページ内のクリック検知に加え、WebView2 の <code>NavigationStarting</code> / <code>NewWindowRequested</code> をネイティブで受けて判定します(<code>comhook.go</code>)。<code>location.href</code> やリダイレクトも既定のブラウザーへ回ります。タブを閉じるときはハンドラ解除とコントローラの <code>Close</code> を行います。</li>
 <li>レイアウトは固定ピクセルで、高 DPI への対応は簡易的です (<code>window.go</code> の定数で調整可能)。</li>
 <li>通知バッジと X 側のテーマ連動は、X の DOM / クッキー仕様に依存します。</li>
 </ul>
