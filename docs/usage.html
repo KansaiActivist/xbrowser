@@ -52,6 +52,19 @@
 <li>すでに起動しているときは、新しいウィンドウを作らず、起動中のアプリに新しいタブとして渡して前面に出します。</li>
 <li>X のドメイン以外の引数は無視します。一度に開けるタブは 40 個までです。</li>
 </ul>
+<h2>他のブラウザーの「X で共有」を受ける</h2>
+<p>Windows は <code>x.com</code> のリンクだけを特定のアプリで開かせることができません。そのため、アプリが <code>xbrowser://</code> を受け付け、付属の<b>ブラウザー拡張機能</b>が共有ボタン (<code>x.com/intent/post</code> など) を <code>xbrowser://share?...</code> に切り替える、という組み合わせにしています。</p>
+<ol>
+<li>設定 → 一般 → 「他のブラウザーからの共有」をオンにします。現在のユーザーにだけ登録し、管理者権限は不要です。オフにすると削除します。アプリの場所を移動したときは、オフ → オンでやり直してください。</li>
+<li>配布物の <code>extension</code> フォルダを、他のブラウザーに読み込みます。
+<ul>
+<li><b>Chrome / Edge</b>: <code>chrome://extensions</code> (Edge は <code>edge://extensions</code>) で「デベロッパー モード」をオン → 「パッケージ化されていない拡張機能を読み込む」</li>
+<li><b>Firefox</b>: <code>about:debugging</code> → 「このFirefox」 → 「一時的なアドオンを読み込む」 (再起動すると外れます)</li>
+</ul></li>
+<li>共有ボタンを押すと、ブラウザーの確認 (「常に許可」で省略可) のあと XBrowser が前面に出て、<code>text</code> / <code>url</code> / <code>hashtags</code> / <code>via</code> などが入った投稿画面を新しいタブで開きます。</li>
+</ol>
+<p>手動でも <code>xbrowser://share?text=こんにちは&amp;url=https%3A%2F%2Fexample.com</code> や <code>xbrowser://open?url=https%3A%2F%2Fx.com%2Fhome</code> で開けます。投稿画面を開くだけなので、「ポスト」ボタンは自分で押します。</p>
+<div class="note"><b>拡張機能が見る範囲</b>対象は <code>x.com</code> / <code>twitter.com</code> の <code>/intent/post</code>・<code>/intent/tweet</code>・<code>/share</code> だけで、通信は行いません。必要な権限はページ移動の検知 (<code>webNavigation</code>) だけです。</div>
 <h2>翻訳</h2>
 <ul>
 <li>ページ内でテキストを選択して右クリックすると、「コピー / 翻訳」のメニューが出ます。</li>

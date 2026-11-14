@@ -120,6 +120,7 @@ func settingsState() map[string]any {
 		"preset":        presetName(),
 		"presetMode":    themeMode(),
 		"themeSync":     cfg.ThemeSync,
+		"protocol":      protocolRegistered(),
 		"barScale":      cfg.BarScale,
 		"barLayout":     cfg.BarLayout,
 		"radius":        palette.radius,
@@ -396,6 +397,15 @@ func handleSettingsAction(tab *Tab, data string) {
 	case "zoom_reset":
 		app.tabs.ZoomReset()
 		return
+	case "protocol_on", "protocol_off":
+		if err := setProtocolRegistered(p.Action == "protocol_on"); err != nil {
+			debugLog("プロトコル登録の変更に失敗 err=%v", err)
+			tab.toast(T("toast_protocol_fail"))
+		} else if p.Action == "protocol_on" {
+			tab.toast(T("toast_protocol_on"))
+		} else {
+			tab.toast(T("toast_protocol_off"))
+		}
 	case "open_config":
 		_ = exec.Command("notepad.exe", configPath()).Start()
 		return

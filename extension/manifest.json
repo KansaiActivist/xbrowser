@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "XBrowser Share",
+  "version": "1.0.0",
+  "description": "「Xで共有」「Xでポスト」を押したとき、XBrowserの投稿画面を開きます。 / Open the compose screen in XBrowser when you press Share on X.",
+  "permissions": ["webNavigation"],
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": { "id": "xbrowser-share@example.invalid", "strict_min_version": "115.0" }
+  }
+}

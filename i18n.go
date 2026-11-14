@@ -70,11 +70,14 @@ var goStrings = map[string][4]string{
 	"toast_bad_name": {"プロファイル名を入力してください", "Please enter a profile name", "请输入配置文件名称", "프로필 이름을 입력해 주세요"},
 	"toast_removed":  {"プロファイル「%s」を削除しました", "Removed profile \"%s\"", "已删除配置文件“%s”", "프로필 \"%s\"을(를) 삭제했습니다"},
 
-	"pick_title":    {"背景に使う画像を選択", "Choose a background image", "选择背景图片", "배경으로 사용할 이미지 선택"},
-	"pick_filter":   {"画像ファイル", "Image files", "图片文件", "이미지 파일"},
-	"toast_img_ok":  {"背景画像を設定しました", "Background image set", "已设置背景图片", "배경 이미지를 설정했습니다"},
-	"toast_img_bad": {"画像を読み込めませんでした", "Could not load the image", "无法读取图片", "이미지를 불러오지 못했습니다"},
-	"toast_img_big": {"画像が大きすぎます(20MBまで)", "The image is too large (max 20 MB)", "图片过大(最大 20MB)", "이미지가 너무 큽니다(최대 20MB)"},
+	"pick_title":          {"背景に使う画像を選択", "Choose a background image", "选择背景图片", "배경으로 사용할 이미지 선택"},
+	"pick_filter":         {"画像ファイル", "Image files", "图片文件", "이미지 파일"},
+	"toast_protocol_on":   {"共有の受け付けを有効にしました", "Share handling enabled", "已启用分享接收", "공유 받기를 켰습니다"},
+	"toast_protocol_off":  {"共有の受け付けを解除しました", "Share handling disabled", "已关闭分享接收", "공유 받기를 껐습니다"},
+	"toast_protocol_fail": {"登録を変更できませんでした", "Could not change the registration", "无法更改注册", "등록을 변경하지 못했습니다"},
+	"toast_img_ok":        {"背景画像を設定しました", "Background image set", "已设置背景图片", "배경 이미지를 설정했습니다"},
+	"toast_img_bad":       {"画像を読み込めませんでした", "Could not load the image", "无法读取图片", "이미지를 불러오지 못했습니다"},
+	"toast_img_big":       {"画像が大きすぎます(20MBまで)", "The image is too large (max 20 MB)", "图片过大(最大 20MB)", "이미지가 너무 큽니다(최대 20MB)"},
 }
 
 func langIndex() int {

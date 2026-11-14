@@ -51,6 +51,9 @@ func normalizeXURL(arg string) (string, bool) {
 
 func urlFromArgs(args []string) string {
 	for _, a := range args {
+		if u, ok := shareURLFromProtocol(a); ok {
+			return u
+		}
 		if u, ok := normalizeXURL(a); ok {
 			return u
 		}

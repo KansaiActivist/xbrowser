@@ -201,6 +201,10 @@ input[type=range] { flex:1; accent-color:var(--accent); }
     p.appendChild(title(t('notif_title')));
     var on = state.notifications !== 'off';
     p.appendChild(toggleRow(t('notif_label'), t('notif_hint'), on, function (v) { set('notifications', v ? 'on' : 'off'); }));
+    p.appendChild(divider());
+    p.appendChild(title(t('share_title')));
+    p.appendChild(lead(t('share_lead')));
+    p.appendChild(toggleRow(t('share_label'), t('share_hint'), !!state.protocol, function (v) { act(v ? 'protocol_on' : 'protocol_off'); }));
   }
 
   function buildStart(p) {
