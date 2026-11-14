@@ -49,7 +49,7 @@ func mapBackgroundHost(ch *edge.Chromium) {
 		debugLog("仮想ホストの割り当てに非対応のWebView2です(背景画像は表示されません)")
 		return
 	}
-	if err := wv3.SetVirtualHostNameToFolderMapping(bgHost, startBgDir(), edge.COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_ALLOW); err != nil {
+	if err := wv3.SetVirtualHostNameToFolderMapping(bgHost, startBgDir(), edge.COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_DENY_CORS); err != nil {
 		debugLog("仮想ホストの割り当てに失敗 err=%v", err)
 	}
 }

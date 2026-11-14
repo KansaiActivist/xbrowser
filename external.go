@@ -3,11 +3,17 @@
 package main
 
 import (
+	"errors"
+	"io"
 	"net/url"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 	"unicode"
+
+	"golang.org/x/sys/windows"
 )
 
 const maxExternalURLLen = 8192
@@ -41,5 +47,31 @@ func openExternal(raw string) {
 		return
 	}
 	lastExternalOpen = time.Now()
-	_ = exec.Command("rundll32", "url.dll,FileProtocolHandler", target).Start()
+	_ = exec.Command(system32Path("rundll32.exe"), "url.dll,FileProtocolHandler", target).Start()
+}
+
+const maxConfigBytes = 1 << 20
+
+func system32Path(name string) string {
+	dir, err := windows.GetSystemDirectory()
+	if err != nil || dir == "" {
+		return name
+	}
+	return filepath.Join(dir, name)
+}
+
+func readLimited(path string, limit int64) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	b, err := io.ReadAll(io.LimitReader(f, limit+1))
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(b)) > limit {
+		return nil, errors.New("file too large")
+	}
+	return b, nil
 }

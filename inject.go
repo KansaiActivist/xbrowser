@@ -337,5 +337,9 @@ const injectedJSTemplate = `
 `
 
 func injectScript() string {
-	return strings.Replace(injectedJSTemplate, "__XB_LANG__", cfg.Language, 1)
+	lang := "ja"
+	if isLang(cfg.Language) {
+		lang = cfg.Language
+	}
+	return strings.Replace(injectedJSTemplate, "__XB_LANG__", lang, 1)
 }

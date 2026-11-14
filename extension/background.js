@@ -21,21 +21,13 @@ function shareTarget(raw) {
   return 'xbrowser://share?' + q.toString();
 }
 
-async function closeIfPopup(tabId) {
-  try {
-    const tab = await api.tabs.get(tabId);
-    const win = await api.windows.get(tab.windowId);
-    if (win.type === 'popup' || tab.openerTabId !== undefined) await api.tabs.remove(tabId);
-  } catch (e) {}
-}
-
 api.webNavigation.onBeforeNavigate.addListener(
   async (details) => {
     if (details.frameId !== 0) return;
     const target = shareTarget(details.url);
     if (!target) return;
-    await api.tabs.update(details.tabId, { url: target });
-    setTimeout(() => closeIfPopup(details.tabId), 1500);
+    const page = api.runtime.getURL('launch.html') + '?u=' + encodeURIComponent(target);
+    await api.tabs.update(details.tabId, { url: page });
   },
   { url: [{ pathPrefix: '/intent/' }, { pathPrefix: '/share' }] }
 );

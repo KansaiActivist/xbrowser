@@ -43,6 +43,10 @@ type Tab struct {
 
 	lastTranslate time.Time
 	lastOpenTab   time.Time
+
+	closed bool
+	wv     uintptr
+	hooks  []comHook
 }
 
 func (t *Tab) Eval(js string) {
@@ -154,6 +158,7 @@ func (m *TabManager) AddTab(url string, profile string) {
 	}
 
 	applyNotificationSetting(chromium)
+	tab.installHooks()
 
 	chromium.Init(injectScript())
 	if tab.kind != kindWeb {
@@ -177,15 +182,16 @@ func (m *TabManager) SwitchTabProfile(idx int, profile string) {
 	if url == "" || (!isLocalURL(url) && !isHTTPURL(url)) {
 		url = homeURL
 	}
-	win.DestroyWindow(m.tabs[idx].hwnd)
-	m.tabs = append(m.tabs[:idx], m.tabs[idx+1:]...)
+	m.tabs[idx].destroy()
+	m.removeAt(idx)
 
 	m.AddTab(url, profile)
 	last := len(m.tabs) - 1
 	t := m.tabs[last]
 	m.tabs = m.tabs[:last]
-	tail := append([]*Tab{t}, m.tabs[idx:]...)
-	m.tabs = append(m.tabs[:idx], tail...)
+	m.tabs = append(m.tabs, nil)
+	copy(m.tabs[idx+1:], m.tabs[idx:])
+	m.tabs[idx] = t
 	m.active = idx
 }
 
@@ -226,12 +232,36 @@ func (m *TabManager) Refresh() {
 	}
 }
 
+func (m *TabManager) removeAt(i int) {
+	copy(m.tabs[i:], m.tabs[i+1:])
+	m.tabs[len(m.tabs)-1] = nil
+	m.tabs = m.tabs[:len(m.tabs)-1]
+}
+
+func (t *Tab) destroy() {
+	if t.closed {
+		return
+	}
+	t.closed = true
+	t.removeHooks()
+	if t.ready && t.chromium != nil {
+		t.ready = false
+		closeController(t)
+	}
+	if t.chromium != nil {
+		t.chromium.MessageCallback = nil
+		t.chromium.NavigationCompletedCallback = nil
+		t.chromium.AcceleratorKeyCallback = nil
+	}
+	win.DestroyWindow(t.hwnd)
+}
+
 func (m *TabManager) Close(i int) {
 	if i < 0 || i >= len(m.tabs) {
 		return
 	}
-	win.DestroyWindow(m.tabs[i].hwnd)
-	m.tabs = append(m.tabs[:i], m.tabs[i+1:]...)
+	m.tabs[i].destroy()
+	m.removeAt(i)
 
 	if len(m.tabs) == 0 {
 		win.DestroyWindow(m.parent)

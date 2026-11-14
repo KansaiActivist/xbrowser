@@ -90,7 +90,7 @@ func loadConfig() {
 		BarLayout:     layoutTabsTop,
 		Language:      detectLanguage(),
 	}
-	if b, err := os.ReadFile(configPath()); err == nil {
+	if b, err := readLimited(configPath(), maxConfigBytes); err == nil {
 		var c Config
 		if json.Unmarshal(b, &c) == nil {
 

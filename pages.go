@@ -68,16 +68,7 @@ var allowedHostSuffixes = []string{"x.com", "twitter.com", "twimg.com", "twimg.n
 
 func isXURL(raw string) bool {
 	u, err := url.Parse(raw)
-	if err != nil || u.Scheme != "https" {
-		return false
-	}
-	host := strings.ToLower(u.Hostname())
-	for _, s := range allowedHostSuffixes {
-		if host == s || strings.HasSuffix(host, "."+s) {
-			return true
-		}
-	}
-	return false
+	return err == nil && u.Scheme == "https" && isXHost(u.Hostname())
 }
 
 func colorHex(c win.COLORREF) string {
@@ -407,7 +398,7 @@ func handleSettingsAction(tab *Tab, data string) {
 			tab.toast(T("toast_protocol_off"))
 		}
 	case "open_config":
-		_ = exec.Command("notepad.exe", configPath()).Start()
+		_ = exec.Command(system32Path("notepad.exe"), configPath()).Start()
 		return
 	}
 	app.tabs.pushStateAll()
