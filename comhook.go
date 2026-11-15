@@ -181,6 +181,9 @@ func (t *Tab) removeHooks() {
 			comRemoveHook(t.wv, h)
 		}
 	}
+	if t.wv != 0 {
+		comCall(t.wv, 2)
+	}
 	t.hooks, t.wv = nil, 0
 }
 

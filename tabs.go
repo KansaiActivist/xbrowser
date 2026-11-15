@@ -44,9 +44,11 @@ type Tab struct {
 	lastTranslate time.Time
 	lastOpenTab   time.Time
 
-	closed bool
-	wv     uintptr
-	hooks  []comHook
+	closed    bool
+	suspended bool
+	hiddenAt  time.Time
+	wv        uintptr
+	hooks     []comHook
 }
 
 func (t *Tab) Eval(js string) {
@@ -201,6 +203,9 @@ func (m *TabManager) Switch(i int) {
 	}
 	for idx, t := range m.tabs {
 		if idx != i {
+			if t.hiddenAt.IsZero() {
+				t.hiddenAt = time.Now()
+			}
 			win.ShowWindow(t.hwnd, win.SW_HIDE)
 			if t.ready {
 				_ = t.chromium.Hide()
@@ -208,6 +213,7 @@ func (m *TabManager) Switch(i int) {
 		}
 	}
 	m.active = i
+	m.tabs[i].resume()
 	win.ShowWindow(m.tabs[i].hwnd, win.SW_SHOW)
 	m.Refresh()
 	if m.tabs[i].ready {

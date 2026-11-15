@@ -38,6 +38,7 @@ func main() {
 		return
 	}
 
+	refreshProtocolRegistration()
 	coInitialize()
 	initGdiplus()
 	loadConfig()

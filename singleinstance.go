@@ -4,6 +4,7 @@ package main
 
 import (
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/lxn/win"
@@ -25,7 +26,12 @@ func ensureSingleInstance(forwardURL string) bool {
 	}
 	if errno, ok := callErr.(syscall.Errno); ok && errno == errorAlreadyExists {
 		classPtr, _ := syscall.UTF16PtrFromString(className)
-		existing := win.FindWindow(classPtr, nil)
+		var existing win.HWND
+		for i := 0; i < 50 && existing == 0; i++ {
+			if existing = win.FindWindow(classPtr, nil); existing == 0 {
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
 		if existing != 0 {
 			if forwardURL != "" {
 				sendURLToRunning(existing, forwardURL)

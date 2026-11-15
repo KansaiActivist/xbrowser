@@ -71,6 +71,7 @@ func initChromeWindow(hwnd win.HWND) {
 	}
 	app.tabs.AddTab(first, "")
 	app.layout()
+	startTrimTimer(hwnd)
 }
 
 func (c *ChromeWindow) contentRect() win.RECT {
@@ -571,7 +572,13 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 		win.DestroyWindow(hwnd)
 		return 0
 
+	case win.WM_TIMER:
+		if wParam == trimTimerID && app != nil && app.tabs != nil {
+			app.tabs.trimHidden()
+		}
+		return 0
 	case win.WM_DESTROY:
+		stopTrimTimer(hwnd)
 		win.PostQuitMessage(0)
 		return 0
 	}

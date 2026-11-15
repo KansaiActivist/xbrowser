@@ -19,16 +19,20 @@ const (
 var shareParams = []string{"text", "url", "hashtags", "via", "related", "in_reply_to"}
 
 func shareURLFromProtocol(arg string) (string, bool) {
-	arg = strings.TrimSpace(arg)
-	if len(arg) > maxExternalURLLen || !strings.HasPrefix(strings.ToLower(arg), protocolScheme+":") {
+	arg = strings.TrimSpace(strings.Trim(arg, "\""))
+	if len(arg) > maxExternalURLLen || len(arg) < len(protocolScheme)+1 || !strings.EqualFold(arg[:len(protocolScheme)+1], protocolScheme+":") {
 		return "", false
 	}
-	u, err := url.Parse(arg)
-	if err != nil {
-		return "", false
+	rest := strings.TrimLeft(arg[len(protocolScheme)+1:], "/")
+	if k := strings.IndexByte(rest, '#'); k >= 0 {
+		rest = rest[:k]
 	}
-	q := u.Query()
-	switch strings.ToLower(u.Host) {
+	name, query := rest, ""
+	if k := strings.IndexByte(rest, '?'); k >= 0 {
+		name, query = rest[:k], rest[k+1:]
+	}
+	q, _ := url.ParseQuery(query)
+	switch strings.ToLower(strings.Trim(name, "/")) {
 	case "share":
 		out := url.Values{}
 		for _, k := range shareParams {
@@ -41,6 +45,19 @@ func shareURLFromProtocol(arg string) (string, bool) {
 		return normalizeXURL(q.Get("url"))
 	}
 	return "", false
+}
+
+func refreshProtocolRegistration() {
+	k, err := registry.OpenKey(registry.CURRENT_USER, protocolRegPath+`\shell\open\command`, registry.QUERY_VALUE)
+	if err != nil {
+		return
+	}
+	k.Close()
+	if !protocolRegistered() {
+		if err := setProtocolRegistered(true); err != nil {
+			debugLog("プロトコル登録の更新に失敗 err=%v", err)
+		}
+	}
 }
 
 func cleanShareValue(s string) string {
