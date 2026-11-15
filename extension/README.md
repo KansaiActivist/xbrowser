@@ -9,7 +9,7 @@ XBrowser の投稿画面を開く拡張機能です。
 2. この `extension` フォルダを、使っているブラウザーに読み込みます。
    - **Chrome / Edge**: `chrome://extensions`(Edge は `edge://extensions`)→「デベロッパー モード」をオン →
      「パッケージ化されていない拡張機能を読み込む」→ このフォルダを選ぶ。
-   - **Firefox**: `about:debugging` →「このFirefox」→「一時的なアドオンを読み込む」→ `manifest.json` を選ぶ
+   - **Firefox**: `manifest.firefox.json` の名前を `manifest.json` に変更(元のものは退避)してから、`about:debugging` →「このFirefox」→「一時的なアドオンを読み込む」→ `manifest.json` を選ぶ
      (Firefox は再起動すると外れます)。
 3. 共有ボタンを押すと、ブラウザーが「XBrowser を開きますか?」と確認します。
    「常に許可」にすると、次からは確認なしで開きます。

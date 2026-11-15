@@ -6,7 +6,7 @@ const ja = (navigator.language || '').startsWith('ja');
 if (!ja) {
   document.documentElement.lang = 'en';
   document.getElementById('title').textContent = 'Opening in XBrowser';
-  document.getElementById('msg').textContent = 'If nothing happens, press the button below.';
+  document.getElementById('msg').textContent = 'If nothing happens, press the button below. If it still does not open, turn on "Accept shares" in XBrowser settings and check "XBrowser location".';
   document.getElementById('open').textContent = 'Open in XBrowser';
   document.getElementById('close').textContent = 'Close';
 }
