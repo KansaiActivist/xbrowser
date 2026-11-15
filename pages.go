@@ -112,6 +112,9 @@ func settingsState() map[string]any {
 		"presetMode":    themeMode(),
 		"themeSync":     cfg.ThemeSync,
 		"protocol":      protocolRegistered(),
+		"exePath":       cfg.ExePath,
+		"exeAuto":       detectedExe(),
+		"exeInUse":      resolveExe(),
 		"barScale":      cfg.BarScale,
 		"barLayout":     cfg.BarLayout,
 		"radius":        palette.radius,
@@ -253,6 +256,9 @@ func handleSettingsSet(tab *Tab, data string) {
 			cfg.StartPage = str
 			saveConfig()
 		}
+	case "exePath":
+		applyExePath(tab, strings.TrimSpace(strings.Trim(strings.TrimSpace(str), "\"")))
+		return
 	case "notifications":
 		if str == "on" || str == "off" {
 			cfg.Notifications = str
@@ -397,6 +403,14 @@ func handleSettingsAction(tab *Tab, data string) {
 		} else {
 			tab.toast(T("toast_protocol_off"))
 		}
+	case "exe_pick":
+		path, ok := pickFile(app.hwnd, T("exe_pick_title"), T("exe_pick_filter"), "*.exe")
+		if !ok {
+			return
+		}
+		applyExePath(tab, path)
+	case "exe_clear":
+		applyExePath(tab, "")
 	case "open_config":
 		_ = exec.Command(system32Path("notepad.exe"), configPath()).Start()
 		return
@@ -420,4 +434,23 @@ func pickBackgroundImage() {
 		}
 		t.toast(T(key))
 	}
+}
+
+func applyExePath(tab *Tab, path string) {
+	if path != "" && !validExePath(path) {
+		tab.toast(T("toast_exe_bad"))
+		app.tabs.pushStateAll()
+		return
+	}
+	cfg.ExePath = path
+	saveConfig()
+	if protocolRegistered() || registeredCommandExists() {
+		if err := setProtocolRegistered(true); err != nil {
+			tab.toast(T("toast_protocol_fail"))
+			app.tabs.pushStateAll()
+			return
+		}
+	}
+	tab.toast(T("toast_exe_ok"))
+	app.tabs.pushStateAll()
 }

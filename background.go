@@ -55,11 +55,15 @@ func mapBackgroundHost(ch *edge.Chromium) {
 }
 
 func pickImageFile(owner win.HWND) (string, bool) {
-	filter := T("pick_filter") + "\x00*.jpg;*.jpeg;*.png;*.gif;*.webp;*.bmp\x00\x00"
+	return pickFile(owner, T("pick_title"), T("pick_filter"), "*.jpg;*.jpeg;*.png;*.gif;*.webp;*.bmp")
+}
+
+func pickFile(owner win.HWND, titleText, filterName, patterns string) (string, bool) {
+	filter := filterName + "\x00" + patterns + "\x00\x00"
 	// フィルタはNUL区切りなので、NULでpanicするStringToUTF16は使わない
 	filterU := utf16pkg.Encode([]rune(filter + "\x00"))
 	buf := make([]uint16, 1024)
-	title, _ := syscall.UTF16PtrFromString(T("pick_title"))
+	title, _ := syscall.UTF16PtrFromString(titleText)
 
 	ofn := win.OPENFILENAME{
 		LStructSize:  uint32(unsafe.Sizeof(win.OPENFILENAME{})),

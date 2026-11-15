@@ -205,6 +205,17 @@ input[type=range] { flex:1; accent-color:var(--accent); }
     p.appendChild(title(t('share_title')));
     p.appendChild(lead(t('share_lead')));
     p.appendChild(toggleRow(t('share_label'), t('share_hint'), !!state.protocol, function (v) { act(v ? 'protocol_on' : 'protocol_off'); }));
+    p.appendChild(title(t('exe_label')));
+    p.appendChild(lead(t('exe_hint')));
+    var exeInput = h('input', { class: 'field', type: 'text', maxlength: '500', placeholder: state.exeAuto || 'C:\\Path\\To\\X.exe', value: state.exePath || '' });
+    exeInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') set('exePath', exeInput.value.trim()); });
+    p.appendChild(h('div', { class: 'row' }, [exeInput]));
+    p.appendChild(h('div', { class: 'row' }, [
+      button(t('exe_browse'), '', function () { act('exe_pick'); }),
+      button(t('exe_save'), '', function () { set('exePath', exeInput.value.trim()); }),
+      button(t('exe_reset'), '', function () { act('exe_clear'); })
+    ]));
+    p.appendChild(lead(t('exe_current') + (state.exeInUse || '-')));
   }
 
   function buildStart(p) {

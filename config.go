@@ -37,6 +37,7 @@ type Config struct {
 	Language      string   `json:"language"`
 	StartBg       string   `json:"startBg"`
 	StartImage    string   `json:"startImage"`
+	ExePath       string   `json:"exePath"`
 
 	BarScale      int               `json:"barScale"`
 	BarLayout     string            `json:"barLayout"`

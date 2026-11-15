@@ -3,8 +3,10 @@
 package main
 
 import (
+	"errors"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/sys/windows/registry"
@@ -73,12 +75,47 @@ func cleanShareValue(s string) string {
 	return string(r)
 }
 
+func detectedExe() string {
+	if exe, err := os.Executable(); err == nil && fileExists(exe) {
+		return exe
+	}
+	if abs, err := filepath.Abs(os.Args[0]); err == nil && fileExists(abs) {
+		return abs
+	}
+	return ""
+}
+
+func fileExists(p string) bool {
+	st, err := os.Stat(p)
+	return err == nil && !st.IsDir()
+}
+
+func validExePath(p string) bool {
+	return p != "" && len(p) < 520 && filepath.IsAbs(p) && strings.EqualFold(filepath.Ext(p), ".exe") && fileExists(p)
+}
+
+func resolveExe() string {
+	if validExePath(cfg.ExePath) {
+		return cfg.ExePath
+	}
+	return detectedExe()
+}
+
 func protocolCommand() string {
-	exe, err := os.Executable()
-	if err != nil {
+	exe := resolveExe()
+	if exe == "" {
 		return ""
 	}
 	return `"` + exe + `" "%1"`
+}
+
+func registeredCommandExists() bool {
+	k, err := registry.OpenKey(registry.CURRENT_USER, protocolRegPath+`\shell\open\command`, registry.QUERY_VALUE)
+	if err != nil {
+		return false
+	}
+	k.Close()
+	return true
 }
 
 func protocolRegistered() bool {
@@ -100,9 +137,9 @@ func setProtocolRegistered(on bool) error {
 		}
 		return nil
 	}
-	exe, err := os.Executable()
-	if err != nil {
-		return err
+	exe := resolveExe()
+	if exe == "" {
+		return errors.New("executable not found")
 	}
 	set := func(path, name, value string) error {
 		k, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.SET_VALUE)
