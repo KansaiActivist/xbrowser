@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<link rel="icon" href="./src/favicon.ico" type="image/x-icon">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>プラグイン - xbrowser Wiki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<nav id="nav"></nav>
+<main><article>
+<h1>プラグイン</h1>
+<p class="lead">JavaScript / CSS をフォルダーに置くだけでページへ機能を追加できます。同梱の <code>sns-hub</code> は Bluesky・Threads・Mastodon などをアプリ内のタブで開けるようにします。</p>
+
+<h2>インストール</h2>
+<ol>
+<li>設定 →「プラグイン」→「プラグインフォルダーを開く」を押します(<code>%LocalAppData%\XBrowser\plugins</code>。実行ファイルの隣の <code>plugins</code> フォルダーも読み込みます)。</li>
+<li>プラグインのフォルダー(中に <code>plugin.json</code>)をそのまま置きます。</li>
+<li>「再読み込み」を押し、新しくタブを開くと反映されます。オン・オフも同じ画面から切り替えられます。</li>
+</ol>
+
+<h2>plugin.json</h2>
+<pre><code>{
+  "id": "my-plugin",
+  "name": "My Plugin",
+  "version": "1.0.0",
+  "description": "説明",
+  "matches": ["x.com"],
+  "allowHosts": ["example.social"],
+  "js": ["main.js"],
+  "css": ["style.css"],
+  "config": { "好きな設定": 1 }
+}</code></pre>
+<table>
+<tr><th>項目</th><th>内容</th></tr>
+<tr><td><code>id</code></td><td>必須。英小文字・数字・<code>-</code>・<code>_</code>、40文字まで</td></tr>
+<tr><td><code>matches</code></td><td>実行するホスト。空なら、アプリ内で開けるすべてのサイト。サブドメインを含む</td></tr>
+<tr><td><code>allowHosts</code></td><td>このプラグインを有効にすると、アプリ内のタブで開くサイトに加えるホスト。それ以外の外部サイトは従来どおり既定のブラウザーで開く</td></tr>
+<tr><td><code>js</code> / <code>css</code></td><td>プラグインフォルダー内の相対パス(各512KBまで、合計2MBまで)</td></tr>
+<tr><td><code>config</code></td><td>自由なJSON。スクリプトから <code>xb.config</code> で読める</td></tr>
+</table>
+
+<h2>スクリプトから使える <code>xb</code></h2>
+<table>
+<tr><th>名前</th><th>内容</th></tr>
+<tr><td><code>xb.id / name / version / host / lang / isX</code></td><td>プラグイン情報、表示中のホスト、言語、Xのページかどうか</td></tr>
+<tr><td><code>xb.config</code></td><td><code>plugin.json</code> の <code>config</code></td></tr>
+<tr><td><code>xb.css(text)</code></td><td>CSSを追加</td></tr>
+<tr><td><code>xb.onReady(fn)</code></td><td>DOMの準備ができたら実行</td></tr>
+<tr><td><code>xb.storage.get / set / remove</code></td><td>プラグインごとの保存領域(サイトごと・プロファイルごと)</td></tr>
+<tr><td><code>xb.openTab(url)</code></td><td>アプリ内の新しいタブで開く(アプリ内で開けるサイトのみ)</td></tr>
+<tr><td><code>xb.openExternal(url)</code></td><td>既定のブラウザーで開く</td></tr>
+<tr><td><code>xb.isAllowedHost(host)</code></td><td>アプリ内で開けるホストか</td></tr>
+</table>
+<p>スクリプトはページの読み込み時(<code>document-start</code>)に、トップのフレームだけで実行されます。プラグインごとに別のスクリプトとして登録するため、あるプラグインに構文エラーがあっても他には影響しません。</p>
+
+<h2>同梱: sns-hub</h2>
+<p>画面左下のボタンから Bluesky・Threads・Mastodon・Misskey・Instagram・Facebook・Reddit・TikTok・LinkedIn・Tumblr・Pinterest・YouTube・X を開きます。ログイン状態はプロファイルごとに保持されます。サイトを足すときは <code>plugin.json</code> の <code>config.sites</code> と <code>allowHosts</code> の両方に追記してください(例: 別の Mastodon サーバー)。ボタンを右下にするには <code>"position": "right"</code> にします。</p>
+<p>Google などの外部ログインを使うサイトは、ログイン用のホスト(例: <code>accounts.google.com</code>)を <code>allowHosts</code> に足さないと、ログイン画面が既定のブラウザーで開いてしまいます。</p>
+
+<h2>安全のために</h2>
+<ul>
+<li>プラグインは対象サイトのページ内で自由にスクリプトを実行できます。信頼できるものだけを入れてください。</li>
+<li><code>allowHosts</code> には <code>co.jp</code> のような公開サフィックスや IP アドレスは指定できません。</li>
+<li>プラグインフォルダー外のファイル、シンボリックリンク経由のファイルは読み込みません。</li>
+<li>プラグインは <code>https</code> のページでだけ動作します。</li>
+</ul>
+</article></main>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

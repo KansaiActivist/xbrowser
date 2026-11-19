@@ -1,7 +1,7 @@
 (function(){
 var PAGES=[
 ["概要",[["index.html","ホーム"],["features.html","機能一覧"]]],
-["使い方",[["usage.html","基本操作とショートカット"],["settings.html","設定画面"],["profiles.html","プロファイル"]]],
+["使い方",[["usage.html","基本操作とショートカット"],["settings.html","設定画面"],["plugins.html","プラグイン"],["profiles.html","プロファイル"]]],
 ["開発者向け",[["build.html","ビルド方法"],["architecture.html","仕組み・構成"],["config.html","config.json リファレンス"]]],
 ["サポート",[["troubleshooting.html","トラブルシューティング"]]]
 ];
