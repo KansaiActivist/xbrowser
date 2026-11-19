@@ -216,6 +216,12 @@ XのメニューのバッジとタイトルのXの `(N)` から読み取って�
 - 設定ファイルは一時ファイル経由で書き込むため、途中で終了しても壊れません。
   `debug.log` は1MBを超えると次回起動時に作り直し、ページから届いたメッセージの中身は記録しません。
 
+## プラグイン
+
+`%LocalAppData%\XBrowser\plugins`(または実行ファイルの隣の `plugins`)にフォルダーを置くと、JavaScript / CSS をページへ追加できます。
+設定の「プラグイン」でオン・オフと再読み込みができます。詳しくは `plugins/README.md` を参照してください。
+同梱の `plugins/sns-hub` は、Bluesky・Threads・Mastodon・Misskey・Instagram などをアプリ内のタブで開けるようにします。
+
 ## 共有で本体が起動しない場合
 
 設定の「他のブラウザーからの共有」にある「XBrowserの場所」に X.exe のフルパスを指定できます(`config.json` の `exePath`)。

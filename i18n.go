@@ -74,6 +74,7 @@ var goStrings = map[string][4]string{
 	"pick_filter":         {"画像ファイル", "Image files", "图片文件", "이미지 파일"},
 	"toast_protocol_on":   {"共有の受け付けを有効にしました", "Share handling enabled", "已启用分享接收", "공유 받기를 켰습니다"},
 	"toast_protocol_off":  {"共有の受け付けを解除しました", "Share handling disabled", "已关闭分享接收", "공유 받기를 껐습니다"},
+	"toast_plugin_reload": {"プラグインを再読み込みしました(新しく開くタブから反映されます)", "Plugins reloaded (applies to tabs you open next)", "已重新加载插件(新打开的标签页生效)", "플러그인을 다시 불러왔습니다(새로 여는 탭부터 적용)"},
 	"toast_exe_ok":        {"実行ファイルの場所を保存しました", "Saved the executable location", "已保存可执行文件位置", "실행 파일 위치를 저장했습니다"},
 	"toast_exe_bad":       {"有効な .exe のフルパスを指定してください", "Enter a valid full path to an .exe file", "请指定有效的 .exe 完整路径", "유효한 .exe 전체 경로를 입력하세요"},
 	"exe_pick_title":      {"XBrowserの実行ファイルを選択", "Select the XBrowser executable", "选择 XBrowser 可执行文件", "XBrowser 실행 파일 선택"},

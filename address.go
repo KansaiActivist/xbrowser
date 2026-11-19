@@ -145,13 +145,7 @@ func refreshAddress(force bool) {
 }
 
 func isXHost(host string) bool {
-	host = strings.ToLower(host)
-	for _, s := range allowedHostSuffixes {
-		if host == s || strings.HasSuffix(host, "."+s) {
-			return true
-		}
-	}
-	return false
+	return hostMatches(host, allowedHostSuffixes) || hostMatches(host, pluginHosts)
 }
 
 func searchURL(q string) string {

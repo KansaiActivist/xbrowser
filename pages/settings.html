@@ -100,6 +100,7 @@ input[type=range] { flex:1; accent-color:var(--accent); }
   #back { display:grid; place-items:center; }
 }
 .thumb { flex:none; width:112px; height:64px; border-radius:8px; border:1px solid var(--line); background:var(--card) center/cover no-repeat; }
+.t span { white-space: pre-line; word-break: break-all; }
 .btns { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
 </style>
 </head>
@@ -168,6 +169,7 @@ input[type=range] { flex:1; accent-color:var(--accent); }
     appearance: '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.5-1.9-.3-1 .4-2.1 1.5-2.1H17a4 4 0 0 0 4-4c0-5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/>',
     profiles: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17.5 14.5a5 5 0 0 1 4 5"/>',
     display: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/>',
+    plugins: '<path d="M10 3v3H7a2 2 0 0 0-2 2v3h3a2 2 0 1 1 0 4H5v3a2 2 0 0 0 2 2h3v-3a2 2 0 1 1 4 0v3h3a2 2 0 0 0 2-2v-3h-3a2 2 0 1 1 0-4h3V8a2 2 0 0 0-2-2h-3V3a2 2 0 1 0-4 0z"/>',
     about: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>'
   };
 
@@ -178,6 +180,7 @@ input[type=range] { flex:1; accent-color:var(--accent); }
     { id: 'appearance', kw: 'テーマ ダーク ライト 色 丸み タブ theme color radius dark light 主题 颜色 테마 색상', build: buildAppearance },
     { id: 'profiles', kw: 'アカウント プロファイル ログイン 追加 account profile login 账号 配置文件 계정 프로필', build: buildProfiles },
     { id: 'display', kw: '拡大 縮小 ズーム zoom 缩放 확대', build: buildDisplay },
+    { id: 'plugins', kw: 'プラグイン 拡張 js plugin extension script SNS 插件 플러그인', build: buildPlugins },
     { id: 'about', kw: 'config.json 設定ファイル 情報 about settings file 关于 정보', build: buildAbout }
   ];
   function sLabel(s) { return t('sec_' + s.id); }
@@ -364,6 +367,27 @@ input[type=range] { flex:1; accent-color:var(--accent); }
         h('span', { class: 'val', style: 'color:var(--text);font-weight:700', text: pct }),
         button(t('zoom_in'), '', function () { act('zoom_in'); })])]));
     p.appendChild(h('div', { class: 'row' }, [text(t('zoom_reset'), null), button(t('reset'), '', function () { act('zoom_reset'); })]));
+  }
+
+  function buildPlugins(p) {
+    p.appendChild(title(t('plug_title')));
+    p.appendChild(lead(t('plug_lead')));
+    var list = state.plugins || [];
+    if (!list.length) p.appendChild(lead(t('plug_none')));
+    list.forEach(function (pl) {
+      var hint = [pl.version ? 'v' + pl.version : '', pl.description || ''].filter(Boolean).join(' · ');
+      if (pl.hosts && pl.hosts.length) hint += (hint ? '\n' : '') + t('plug_hosts') + pl.hosts.join(', ');
+      if (pl.error) hint += (hint ? '\n' : '') + t('plug_error') + pl.error;
+      var on = pl.enabled && !pl.error;
+      var row = toggleRow(pl.name, hint, on, function (v) { if (!pl.error) act('plugin_toggle', pl.id, v ? 'on' : 'off'); });
+      p.appendChild(row);
+    });
+    p.appendChild(h('div', { class: 'row' }, [
+      button(t('plug_folder'), '', function () { act('plugin_folder'); }),
+      button(t('plug_reload'), '', function () { act('plugin_reload'); })
+    ]));
+    p.appendChild(lead(t('plug_dir') + (state.pluginsDir || '')));
+    p.appendChild(lead(t('plug_warn')));
   }
 
   function buildAbout(p) {

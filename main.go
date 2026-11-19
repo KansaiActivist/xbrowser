@@ -42,6 +42,7 @@ func main() {
 	coInitialize()
 	initGdiplus()
 	loadConfig()
+	loadPlugins()
 
 	user32 := syscall.NewLazyDLL("user32.dll")
 	if p := user32.NewProc("SetProcessDPIAware"); p.Find() == nil {

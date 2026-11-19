@@ -112,6 +112,8 @@ func settingsState() map[string]any {
 		"presetMode":    themeMode(),
 		"themeSync":     cfg.ThemeSync,
 		"protocol":      protocolRegistered(),
+		"plugins":       pluginStates(),
+		"pluginsDir":    userPluginDir(),
 		"exePath":       cfg.ExePath,
 		"exeAuto":       detectedExe(),
 		"exeInUse":      resolveExe(),
@@ -403,6 +405,16 @@ func handleSettingsAction(tab *Tab, data string) {
 		} else {
 			tab.toast(T("toast_protocol_off"))
 		}
+	case "plugin_toggle":
+		if pluginIDPattern.MatchString(name) {
+			setPluginEnabled(name, p.Value == "on")
+		}
+	case "plugin_folder":
+		openPluginFolder()
+		return
+	case "plugin_reload":
+		loadPlugins()
+		tab.toast(T("toast_plugin_reload"))
 	case "exe_pick":
 		path, ok := pickFile(app.hwnd, T("exe_pick_title"), T("exe_pick_filter"), "*.exe")
 		if !ok {

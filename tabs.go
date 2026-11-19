@@ -163,6 +163,9 @@ func (m *TabManager) AddTab(url string, profile string) {
 	tab.installHooks()
 
 	chromium.Init(injectScript())
+	for _, s := range pluginScripts() {
+		chromium.Init(s)
+	}
 	if tab.kind != kindWeb {
 		debugLog("ローカルページ表示 kind=%s", tab.kind)
 		mapBackgroundHost(chromium)

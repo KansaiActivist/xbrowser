@@ -9,9 +9,16 @@ const injectedJSTemplate = `
   if (window.__xbrowser_injected) return;
   window.__xbrowser_injected = true;
 
-  var ALLOWED_SUFFIXES = [
-    'x.com', 'twitter.com', 'twimg.com', 'twimg.net'
-  ];
+  var ALLOWED_SUFFIXES = __XB_HOSTS__;
+  var BASE_SUFFIXES = __XB_BASE__;
+  var IS_X = (function () {
+    var h = location.hostname.toLowerCase();
+    for (var i = 0; i < BASE_SUFFIXES.length; i++) {
+      var s = BASE_SUFFIXES[i];
+      if (h === s || (h.length > s.length && h.slice(-(s.length + 1)) === '.' + s)) return true;
+    }
+    return false;
+  })();
 
   function isAllowedHost(host) {
     host = (host || '').toLowerCase();
@@ -320,16 +327,19 @@ const injectedJSTemplate = `
     var total = fromDom > 0 ? fromDom : fromTitle;
     if (total !== lastBadge) { lastBadge = total; post('badge', String(total)); }
   }
-  setInterval(reportBadge, 3000);
-  window.addEventListener('load', reportBadge);
+  if (IS_X) {
+    setInterval(reportBadge, 3000);
+    window.addEventListener('load', reportBadge);
+  }
 
   try {
+    if (!IS_X) throw 0;
     var c = /(?:^|; )night_mode=(\d)/.exec(document.cookie);
     post('theme_cookie', c ? c[1] : '');
   } catch (e) {}
   var titleEl = document.querySelector('title');
   if (titleEl) {
-    new MutationObserver(function () { reportTitle(); reportBadge(); }).observe(titleEl, { childList: true });
+    new MutationObserver(function () { reportTitle(); if (IS_X) reportBadge(); }).observe(titleEl, { childList: true });
   }
   window.addEventListener('popstate', reportTitle);
   reportTitle();
@@ -341,5 +351,11 @@ func injectScript() string {
 	if isLang(cfg.Language) {
 		lang = cfg.Language
 	}
-	return strings.Replace(injectedJSTemplate, "__XB_LANG__", lang, 1)
+	hosts := append(append([]string{}, allowedHostSuffixes...), pluginHosts...)
+	r := strings.NewReplacer(
+		"__XB_LANG__", lang,
+		"__XB_HOSTS__", mustJSON(hosts),
+		"__XB_BASE__", mustJSON(allowedHostSuffixes),
+	)
+	return r.Replace(injectedJSTemplate)
 }

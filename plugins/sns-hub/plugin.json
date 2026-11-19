@@ -1,0 +1,41 @@
+{
+  "id": "sns-hub",
+  "name": "SNSハブ / SNS Hub",
+  "version": "1.0.0",
+  "description": "画面左下のボタンから、Bluesky・Threads・Mastodon・Misskey・Instagram などをアプリ内のタブで開きます。",
+  "matches": [],
+  "allowHosts": [
+    "bsky.app",
+    "threads.com",
+    "threads.net",
+    "mastodon.social",
+    "misskey.io",
+    "instagram.com",
+    "facebook.com",
+    "reddit.com",
+    "tiktok.com",
+    "linkedin.com",
+    "tumblr.com",
+    "pinterest.com",
+    "youtube.com"
+  ],
+  "js": ["sns-hub.js"],
+  "config": {
+    "position": "left",
+    "sites": [
+      { "name": "Bluesky", "url": "https://bsky.app/", "color": "#1185fe" },
+      { "name": "Threads", "url": "https://www.threads.com/", "color": "#8e8e93" },
+      { "name": "Mastodon", "url": "https://mastodon.social/", "color": "#6364ff" },
+      { "name": "Misskey", "url": "https://misskey.io/", "color": "#86b300" },
+      { "name": "Instagram", "url": "https://www.instagram.com/", "color": "#e1306c" },
+      { "name": "Facebook", "url": "https://www.facebook.com/", "color": "#1877f2" },
+      { "name": "Reddit", "url": "https://www.reddit.com/", "color": "#ff4500" },
+      { "name": "TikTok", "url": "https://www.tiktok.com/", "color": "#25f4ee" },
+      { "name": "LinkedIn", "url": "https://www.linkedin.com/", "color": "#0a66c2" },
+      { "name": "Tumblr", "url": "https://www.tumblr.com/", "color": "#5f7a96" },
+      { "name": "Pinterest", "url": "https://www.pinterest.com/", "color": "#e60023" },
+      { "name": "YouTube", "url": "https://www.youtube.com/", "color": "#ff0000" },
+      { "name": "X", "url": "https://x.com/home", "color": "#71767b" }
+    ]
+  }
+}

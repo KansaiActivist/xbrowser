@@ -28,16 +28,17 @@ type Theme struct {
 }
 
 type Config struct {
-	Comment       string   `json:"_comment"`
-	Zoom          float64  `json:"zoom"`
-	Theme         Theme    `json:"theme"`
-	Notifications string   `json:"notifications"`
-	Profiles      []string `json:"profiles"`
-	StartPage     string   `json:"startPage"`
-	Language      string   `json:"language"`
-	StartBg       string   `json:"startBg"`
-	StartImage    string   `json:"startImage"`
-	ExePath       string   `json:"exePath"`
+	Comment         string   `json:"_comment"`
+	Zoom            float64  `json:"zoom"`
+	Theme           Theme    `json:"theme"`
+	Notifications   string   `json:"notifications"`
+	Profiles        []string `json:"profiles"`
+	StartPage       string   `json:"startPage"`
+	Language        string   `json:"language"`
+	StartBg         string   `json:"startBg"`
+	StartImage      string   `json:"startImage"`
+	ExePath         string   `json:"exePath"`
+	PluginsDisabled []string `json:"pluginsDisabled"`
 
 	BarScale      int               `json:"barScale"`
 	BarLayout     string            `json:"barLayout"`
