@@ -1,4 +1,4 @@
-# プラグイン
+# プラグイン（非推奨）
 
 `plugins/<フォルダー>/plugin.json` と JS / CSS を置くと、XBrowser のページに機能を追加できます。
 同梱の `sns-hub` をこのフォルダーごと `%LocalAppData%\XBrowser\plugins` へコピーすると使えます。
