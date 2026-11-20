@@ -28,17 +28,17 @@ type Theme struct {
 }
 
 type Config struct {
-	Comment         string   `json:"_comment"`
-	Zoom            float64  `json:"zoom"`
-	Theme           Theme    `json:"theme"`
-	Notifications   string   `json:"notifications"`
-	Profiles        []string `json:"profiles"`
-	StartPage       string   `json:"startPage"`
-	Language        string   `json:"language"`
-	StartBg         string   `json:"startBg"`
-	StartImage      string   `json:"startImage"`
-	ExePath         string   `json:"exePath"`
-	PluginsDisabled []string `json:"pluginsDisabled"`
+	Comment        string            `json:"_comment"`
+	Zoom           float64           `json:"zoom"`
+	Theme          Theme             `json:"theme"`
+	Notifications  string            `json:"notifications"`
+	Profiles       []string          `json:"profiles"`
+	StartPage      string            `json:"startPage"`
+	Language       string            `json:"language"`
+	StartBg        string            `json:"startBg"`
+	StartImage     string            `json:"startImage"`
+	ExePath        string            `json:"exePath"`
+	PluginsEnabled map[string]string `json:"pluginsEnabled"`
 
 	BarScale      int               `json:"barScale"`
 	BarLayout     string            `json:"barLayout"`
@@ -101,6 +101,10 @@ func loadConfig() {
 				cfg.Language = c.Language
 			}
 			cfg.StartBg = c.StartBg
+			if validExePath(c.ExePath) {
+				cfg.ExePath = c.ExePath
+			}
+			cfg.PluginsEnabled = sanitizePluginConsent(c.PluginsEnabled)
 			cfg.ProfileNames = c.ProfileNames
 			if strings.ToLower(strings.TrimSpace(c.ThemeSync)) == "off" {
 				cfg.ThemeSync = "off"

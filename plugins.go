@@ -3,7 +3,10 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -49,6 +52,7 @@ type Plugin struct {
 	Config      json.RawMessage `json:"config"`
 
 	dir    string
+	hash   string
 	source string
 	style  string
 	loaded bool
@@ -108,13 +112,26 @@ func hostMatches(host string, list []string) bool {
 	return false
 }
 
-func pluginDisabled(id string) bool {
-	for _, d := range cfg.PluginsDisabled {
-		if d == id {
-			return true
+var pluginHashPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
+
+func sanitizePluginConsent(in map[string]string) map[string]string {
+	out := map[string]string{}
+	for id, h := range in {
+		if len(out) < maxPlugins && pluginIDPattern.MatchString(id) && pluginHashPattern.MatchString(h) {
+			out[id] = h
 		}
 	}
-	return false
+	return out
+}
+
+func pluginEnabled(p *Plugin) bool {
+	h, ok := cfg.PluginsEnabled[p.ID]
+	return ok && p.hash != "" && h == p.hash
+}
+
+func pluginChanged(p *Plugin) bool {
+	h, ok := cfg.PluginsEnabled[p.ID]
+	return ok && h != p.hash
 }
 
 func readPluginFile(dir, rel string, ext string, total *int) (string, bool) {
@@ -172,12 +189,18 @@ func loadPluginDir(dir string) (*Plugin, string) {
 	}
 	total := 0
 	var js, css []string
+	sum := sha256.New()
+	sum.Write(raw)
 	for _, f := range p.JS {
 		s, ok := readPluginFile(dir, f, ".js", &total)
 		if !ok {
 			return &p, f
 		}
 		js = append(js, s)
+		sum.Write([]byte{0})
+		io.WriteString(sum, f)
+		sum.Write([]byte{0})
+		io.WriteString(sum, s)
 	}
 	for _, f := range p.CSS {
 		s, ok := readPluginFile(dir, f, ".css", &total)
@@ -185,10 +208,15 @@ func loadPluginDir(dir string) (*Plugin, string) {
 			return &p, f
 		}
 		css = append(css, s)
+		sum.Write([]byte{0})
+		io.WriteString(sum, f)
+		sum.Write([]byte{0})
+		io.WriteString(sum, s)
 	}
 	if len(p.Config) > 0 && !json.Valid(p.Config) {
 		return &p, "config"
 	}
+	p.hash = hex.EncodeToString(sum.Sum(nil))
 	p.source = strings.Join(js, "\n;\n")
 	p.style = strings.Join(css, "\n")
 	p.loaded = true
@@ -231,7 +259,7 @@ func loadPlugins() {
 	rebuildPluginHosts()
 }
 
-func pluginActive(p *Plugin) bool { return p.loaded && !pluginDisabled(p.ID) }
+func pluginActive(p *Plugin) bool { return p.loaded && pluginEnabled(p) }
 
 func rebuildPluginHosts() {
 	var hosts []string
@@ -304,7 +332,8 @@ func pluginStates() []map[string]any {
 			"name":        p.Name,
 			"version":     p.Version,
 			"description": p.Description,
-			"enabled":     !pluginDisabled(p.ID),
+			"enabled":     pluginActive(p),
+			"changed":     pluginChanged(p),
 			"error":       p.err,
 			"hosts":       hosts,
 		})
@@ -312,17 +341,26 @@ func pluginStates() []map[string]any {
 	return out
 }
 
-func setPluginEnabled(id string, on bool) {
-	var list []string
-	for _, d := range cfg.PluginsDisabled {
-		if d != id {
-			list = append(list, d)
+func findPlugin(id string) *Plugin {
+	for _, p := range plugins {
+		if p.ID == id {
+			return p
 		}
 	}
-	if !on {
-		list = append(list, id)
+	return nil
+}
+
+func setPluginEnabled(p *Plugin, on bool) {
+	next := map[string]string{}
+	for k, v := range cfg.PluginsEnabled {
+		if k != p.ID {
+			next[k] = v
+		}
 	}
-	cfg.PluginsDisabled = list
+	if on && p.loaded {
+		next[p.ID] = p.hash
+	}
+	cfg.PluginsEnabled = next
 	saveConfig()
 	rebuildPluginHosts()
 }

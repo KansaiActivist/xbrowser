@@ -406,9 +406,14 @@ func handleSettingsAction(tab *Tab, data string) {
 			tab.toast(T("toast_protocol_off"))
 		}
 	case "plugin_toggle":
-		if pluginIDPattern.MatchString(name) {
-			setPluginEnabled(name, p.Value == "on")
+		if pl := findPlugin(name); pl != nil && pl.loaded {
+			if p.Value != "on" {
+				setPluginEnabled(pl, false)
+			} else if confirmPluginEnable(pl) {
+				setPluginEnabled(pl, true)
+			}
 		}
+		app.tabs.pushStateAll()
 	case "plugin_folder":
 		openPluginFolder()
 		return
@@ -465,4 +470,14 @@ func applyExePath(tab *Tab, path string) {
 	}
 	tab.toast(T("toast_exe_ok"))
 	app.tabs.pushStateAll()
+}
+
+func confirmPluginEnable(p *Plugin) bool {
+	hosts := "-"
+	if len(p.AllowHosts) > 0 {
+		hosts = strings.Join(p.AllowHosts, ", ")
+	}
+	msg := T("plug_confirm", p.Name, hosts)
+	r := win.MessageBox(app.hwnd, mustUTF16(msg), mustUTF16(T("plug_confirm_title")), win.MB_YESNO|win.MB_ICONWARNING|win.MB_DEFBUTTON2)
+	return r == win.IDYES
 }

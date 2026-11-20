@@ -377,6 +377,7 @@ input[type=range] { flex:1; accent-color:var(--accent); }
     list.forEach(function (pl) {
       var hint = [pl.version ? 'v' + pl.version : '', pl.description || ''].filter(Boolean).join(' · ');
       if (pl.hosts && pl.hosts.length) hint += (hint ? '\n' : '') + t('plug_hosts') + pl.hosts.join(', ');
+      if (pl.changed) hint += (hint ? '\n' : '') + t('plug_changed');
       if (pl.error) hint += (hint ? '\n' : '') + t('plug_error') + pl.error;
       var on = pl.enabled && !pl.error;
       var row = toggleRow(pl.name, hint, on, function (v) { if (!pl.error) act('plugin_toggle', pl.id, v ? 'on' : 'off'); });
