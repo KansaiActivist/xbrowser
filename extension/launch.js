@@ -11,18 +11,36 @@ if (!ja) {
   document.getElementById('close').textContent = 'Close';
 }
 
-function launch() {
-  if (valid) location.href = target;
-}
+let launched = false;
+let closing = false;
 
-document.getElementById('open').addEventListener('click', launch);
-document.getElementById('close').addEventListener('click', async () => {
+async function closeSelf() {
+  if (closing) return;
+  closing = true;
   try {
     const tab = await api.tabs.getCurrent();
     await api.tabs.remove(tab.id);
   } catch (e) {
     window.close();
   }
+}
+
+function afterAppOpened() {
+  if (launched) setTimeout(closeSelf, 800);
+}
+
+function launch() {
+  if (!valid) return;
+  launched = true;
+  location.href = target;
+}
+
+window.addEventListener('blur', afterAppOpened);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) afterAppOpened();
 });
+
+document.getElementById('open').addEventListener('click', launch);
+document.getElementById('close').addEventListener('click', closeSelf);
 
 if (valid) setTimeout(launch, 100);
